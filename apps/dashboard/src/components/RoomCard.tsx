@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Room } from '../types';
 import { useDashboard } from '../contexts/DashboardContext';
 
@@ -6,7 +7,8 @@ interface RoomCardProps {
   onAssignNext: () => void;
 }
 
-export default function RoomCard({ room, onAssignNext }: RoomCardProps) {
+// ✅ OPTIMIZED: Wrapped with React.memo
+function RoomCard({ room, onAssignNext }: RoomCardProps) {
   const { completeConsultation, toggleRoomPause } = useDashboard();
 
   const statusColors = {
@@ -107,3 +109,6 @@ export default function RoomCard({ room, onAssignNext }: RoomCardProps) {
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo
+export default memo(RoomCard);

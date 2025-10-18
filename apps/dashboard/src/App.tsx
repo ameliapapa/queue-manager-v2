@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
 import RoomCard from './components/RoomCard';
 import RegisteredQueueList from './components/RegisteredQueueList';
@@ -58,25 +58,24 @@ function Dashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleAssignNext = async (roomId: string) => {
+  // ✅ OPTIMIZED: No client-side sorting needed - registeredPatients already sorted by queueNumber
+  const handleAssignNext = useCallback(async (roomId: string) => {
     if (registeredPatients.length === 0) {
       alert('No patients in queue');
       return;
     }
 
-    // Get oldest patient
-    const oldestPatient = [...registeredPatients].sort((a, b) =>
-      new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime()
-    )[0];
+    // ✅ FAST: Just take first patient (already sorted by queueNumber in Firestore query)
+    const nextPatient = registeredPatients[0];
 
-    if (window.confirm(`Assign ${oldestPatient.name} (Q${String(oldestPatient.queueNumber).padStart(3, '0')}) to this room?`)) {
+    if (window.confirm(`Assign ${nextPatient.name} (Q${String(nextPatient.queueNumber).padStart(3, '0')}) to this room?`)) {
       try {
-        await assignPatient(oldestPatient.id, roomId);
+        await assignPatient(nextPatient.id, roomId);
       } catch (error) {
         // Error handled by context
       }
     }
-  };
+  }, [registeredPatients, assignPatient]);
 
   return (
     <div className="min-h-screen bg-gray-50">

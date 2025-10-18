@@ -1,15 +1,15 @@
+import { memo } from 'react';
 import { UnregisteredQueue } from '../types';
-import { formatDistanceToNow } from 'date-fns';
+import { safeFormatDistanceToNow } from '../utils/dateUtils';
 
 interface UnregisteredQueueListProps {
   queue: UnregisteredQueue[];
   onRegister: (queueNumber: number) => void;
 }
 
-export default function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps) {
-  const sortedQueue = [...queue].sort((a, b) =>
-    new Date(a.issuedAt).getTime() - new Date(b.issuedAt).getTime()
-  );
+// ✅ OPTIMIZED: Wrapped with React.memo
+function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps) {
+  // ✅ OPTIMIZED: No need to sort - queue already sorted by createdAt from Firestore
 
   const isUrgent = (issuedAt: Date) => {
     const minutesAgo = (Date.now() - new Date(issuedAt).getTime()) / 1000 / 60;
@@ -27,7 +27,7 @@ export default function UnregisteredQueueList({ queue, onRegister }: Unregistere
 
       {/* Queue List */}
       <div className="flex-1 overflow-y-auto scrollbar-thin space-y-2">
-        {sortedQueue.length === 0 ? (
+        {queue.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -35,7 +35,7 @@ export default function UnregisteredQueueList({ queue, onRegister }: Unregistere
             <p>All patients registered</p>
           </div>
         ) : (
-          sortedQueue.map((item, index) => {
+          queue.map((item, index) => {
             const urgent = isUrgent(item.issuedAt);
             return (
               <div
@@ -60,9 +60,7 @@ export default function UnregisteredQueueList({ queue, onRegister }: Unregistere
                     )}
                   </div>
                   <span className={`text-sm ${urgent ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>
-                    {item.issuedAt
-                      ? formatDistanceToNow(new Date(item.issuedAt), { addSuffix: true })
-                      : 'Just now'}
+                    {safeFormatDistanceToNow(item.issuedAt)}
                   </span>
                 </div>
 
@@ -80,3 +78,6 @@ export default function UnregisteredQueueList({ queue, onRegister }: Unregistere
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo
+export default memo(UnregisteredQueueList);

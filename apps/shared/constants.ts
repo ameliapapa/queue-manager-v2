@@ -25,8 +25,8 @@ export const QUEUE_CONFIG = {
 // Registration URLs
 // For development: http://localhost:3002
 // For production: Set VITE_REGISTRATION_URL in .env
-export const REGISTRATION_BASE_URL = import.meta.env.VITE_REGISTRATION_URL ||
-  'http://localhost:3002';
+// export const REGISTRATION_BASE_URL = import.meta.env.VITE_REGISTRATION_URL ||
+//  'http://localhost:3002';
 
 // Print Configuration
 export const PRINT_CONFIG = {

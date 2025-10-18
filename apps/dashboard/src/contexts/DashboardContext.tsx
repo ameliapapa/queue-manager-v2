@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   collection,
   query,
@@ -192,22 +192,36 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const unsubRooms = onSnapshot(
       roomsQ,
       (snapshot) => {
-        const rooms = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            roomNumber: data.roomNumber,
-            doctorName: data.doctorName,
-            status: data.status,
-            currentPatient: data.currentPatient,
-            lastUpdated: data.lastUpdated?.toDate(),
-          } as Room;
-        });
+        // ✅ OPTIMIZED: Use docChanges for incremental updates
+        setState(prev => {
+          const roomsMap = new Map(prev.rooms.map(r => [r.id, r]));
 
-        setState(prev => ({
-          ...prev,
-          rooms,
-        }));
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+
+            const room: Room = {
+              id: doc.id,
+              roomNumber: data.roomNumber,
+              doctorName: data.doctorName,
+              status: data.status,
+              currentPatient: data.currentPatient,
+              lastUpdated: data.lastUpdated?.toDate(),
+            };
+
+            if (change.type === 'removed') {
+              roomsMap.delete(doc.id);
+            } else {
+              roomsMap.set(doc.id, room);
+            }
+          });
+
+          const rooms = Array.from(roomsMap.values());
+          return {
+            ...prev,
+            rooms,
+          };
+        });
       },
       (error) => {
         console.error('❌ Error listening to rooms:', error);
@@ -282,7 +296,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
   }, []); // ✅ Only run ONCE on mount
 
-  const addNotification = (type: Notification['type'], message: string) => {
+  // ✅ OPTIMIZED: Wrap with useCallback to prevent re-renders
+  const clearNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  const addNotification = useCallback((type: Notification['type'], message: string) => {
     const notification: Notification = {
       id: `notif-${Date.now()}`,
       type,
@@ -298,13 +317,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         clearNotification(notification.id);
       }, 5000);
     }
-  };
+  }, [clearNotification]);
 
-  const clearNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const assignPatient = async (patientId: string, roomId: string) => {
+  const assignPatient = useCallback(async (patientId: string, roomId: string) => {
     const result = await api.assignPatientToRoom(patientId, roomId);
     if (result.success) {
       // ✅ No need to refresh - Firestore listeners will update automatically
@@ -313,9 +328,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to assign patient');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
-  const completeConsultation = async (roomId: string) => {
+  const completeConsultation = useCallback(async (roomId: string) => {
     const result = await api.completeConsultation(roomId);
     if (result.success) {
       // ✅ Real-time listeners will update automatically
@@ -324,9 +339,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to complete consultation');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
-  const toggleRoomPause = async (roomId: string) => {
+  const toggleRoomPause = useCallback(async (roomId: string) => {
     const result = await api.toggleRoomPause(roomId);
     if (result.success) {
       // ✅ Real-time listeners will update automatically
@@ -335,9 +350,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to toggle room status');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
-  const registerPatient = async (queueNumber: number, formData: PatientFormData) => {
+  const registerPatient = useCallback(async (queueNumber: number, formData: PatientFormData) => {
     const result = await api.registerPatient(queueNumber, formData);
     if (result.success) {
       // ✅ Real-time listeners will update automatically
@@ -346,9 +361,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to register patient');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
-  const updatePatient = async (patientId: string, updates: Partial<PatientFormData>) => {
+  const updatePatient = useCallback(async (patientId: string, updates: Partial<PatientFormData>) => {
     const result = await api.updatePatient(patientId, updates);
     if (result.success) {
       // ✅ Real-time listeners will update automatically
@@ -357,9 +372,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to update patient');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
-  const cancelPatient = async (patientId: string, reason: string) => {
+  const cancelPatient = useCallback(async (patientId: string, reason: string) => {
     const result = await api.cancelPatient(patientId, reason);
     if (result.success) {
       // ✅ Real-time listeners will update automatically
@@ -368,7 +383,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       addNotification('error', result.error || 'Failed to cancel patient');
       throw new Error(result.error);
     }
-  };
+  }, [addNotification]);
 
   return (
     <DashboardContext.Provider

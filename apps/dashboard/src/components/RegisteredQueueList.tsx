@@ -1,25 +1,21 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Patient } from '../types';
-import { formatDistanceToNow } from 'date-fns';
+import { safeFormatDistanceToNow } from '../utils/dateUtils';
 
 interface RegisteredQueueListProps {
   patients: Patient[];
   onPatientClick: (patient: Patient) => void;
 }
 
-export default function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListProps) {
+// ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
+function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // ✅ OPTIMIZED: No need to sort - patients already sorted by queueNumber from Firestore
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.queueNumber.toString().includes(searchTerm)
   );
-
-  const sortedPatients = [...filteredPatients].sort((a, b) => {
-    const timeA = a.registeredAt ? new Date(a.registeredAt).getTime() : 0;
-    const timeB = b.registeredAt ? new Date(b.registeredAt).getTime() : 0;
-    return timeA - timeB;
-  });
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
@@ -51,7 +47,7 @@ export default function RegisteredQueueList({ patients, onPatientClick }: Regist
             <p>No registered patients</p>
           </div>
         ) : (
-          sortedPatients.map((patient, index) => (
+          filteredPatients.map((patient, index) => (
             <div
               key={patient.id}
               onClick={() => onPatientClick(patient)}
@@ -73,9 +69,7 @@ export default function RegisteredQueueList({ patients, onPatientClick }: Regist
                     <span>{patient.age} years</span>
                     <span className="capitalize">{patient.gender}</span>
                     <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                      {patient.registeredAt
-                        ? formatDistanceToNow(new Date(patient.registeredAt), { addSuffix: true })
-                        : 'Just now'}
+                      {safeFormatDistanceToNow(patient.registeredAt)}
                     </span>
                   </div>
                   {patient.notes && (
@@ -93,3 +87,6 @@ export default function RegisteredQueueList({ patients, onPatientClick }: Regist
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo to prevent unnecessary re-renders
+export default memo(RegisteredQueueList);

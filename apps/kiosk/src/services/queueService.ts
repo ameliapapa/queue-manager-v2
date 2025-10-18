@@ -74,10 +74,10 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
 
     console.log('📱 Registration URL:', registrationUrl);
 
-    // Generate QR code
-    let qrCodeDataUrl: string;
-    try {
-      qrCodeDataUrl = await QRCode.toDataURL(registrationUrl, {
+    // ✅ OPTIMIZED: Run QR code generation and Firestore write in parallel
+    const [qrCodeDataUrl] = await Promise.all([
+      // Generate QR code (can be slow)
+      QRCode.toDataURL(registrationUrl, {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'H',
@@ -85,40 +85,39 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
           dark: '#000000',
           light: '#FFFFFF',
         },
-      });
-      console.log('✅ QR code generated');
-    } catch (error) {
-      console.error('❌ Error generating QR code:', error);
-      // Fallback to simple data URL
-      qrCodeDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    }
+      }).catch((error) => {
+        console.error('❌ Error generating QR code:', error);
+        // Fallback to simple data URL
+        return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      }),
 
-    // Create patient document in Firestore
-    const patientRef = doc(db, 'patients', patientId);
-    await setDoc(patientRef, {
-      queueNumber,
-      status: 'pending',
-      name: null,
-      phone: null,
-      age: null,
-      gender: null,
-      notes: null,
-      roomNumber: null,
-      createdAt: serverTimestamp(),
-      registeredAt: null,
-      calledAt: null,
-      completedAt: null,
-      qrCodeUrl: registrationUrl,
-      issuedAt: serverTimestamp(),
-    });
+      // Create patient document in Firestore (parallel execution)
+      setDoc(doc(db, 'patients', patientId), {
+        queueNumber,
+        status: 'pending',
+        name: null,
+        phone: null,
+        age: null,
+        gender: null,
+        notes: null,
+        roomNumber: null,
+        createdAt: serverTimestamp(),
+        registeredAt: null,
+        calledAt: null,
+        completedAt: null,
+        qrCodeUrl: registrationUrl,
+        issuedAt: serverTimestamp(),
+      }),
+    ]);
 
+    console.log('✅ QR code generated');
     console.log('💾 Patient saved to Firestore:', {
       patientId,
       queueNumber,
       status: 'pending',
     });
 
-    // Emit WebSocket event for real-time updates
+    // Emit WebSocket event for real-time updates (non-blocking)
     websocketClient.emitQueueIssued({
       queueNumber,
       issuedAt: new Date(),

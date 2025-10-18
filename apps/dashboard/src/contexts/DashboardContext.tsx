@@ -8,7 +8,7 @@ import {
   DashboardState,
   PatientFormData,
 } from '../types';
-import * as api from '../services/mockApi';
+import * as api from '../services/firebaseApi';
 import { useWebSocket } from '../hooks/useWebSocket';
 
 interface DashboardContextType extends DashboardState {

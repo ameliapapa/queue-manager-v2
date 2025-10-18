@@ -89,22 +89,25 @@ async function getRegisteredPatients() {
 
 ## Migration Steps
 
-### Phase 1: Kiosk Migration
+### Phase 1: Kiosk Migration ✅ COMPLETE
 
 1. ✅ Firebase emulators running
 2. ✅ Firestore rules updated (open for development)
-3. ⏳ Create Firebase queue service
-4. ⏳ Update queueService.ts to use Firestore
-5. ⏳ Test queue generation with emulator
+3. ✅ Create Firebase queue service
+4. ✅ Update queueService.ts to use Firestore
+5. ✅ Test queue generation with emulator
+6. ✅ Verify WebSocket events still work
+7. ✅ Backup original: queueService.mock.ts created
+8. ✅ Fix project ID mismatch in .env files
+
+### Phase 2: Dashboard Migration ✅ COMPLETE
+
+1. ✅ Create firebaseApi.ts service
+2. ✅ Implement all API functions with Firestore
+3. ✅ Update DashboardContext imports
+4. ✅ Backup original: mockApi.backup.ts created
+5. ⏳ Test all Dashboard features
 6. ⏳ Verify WebSocket events still work
-
-### Phase 2: Dashboard Migration
-
-1. ⏳ Create firebaseApi.ts service
-2. ⏳ Implement all API functions with Firestore
-3. ⏳ Update DashboardContext imports
-4. ⏳ Test all Dashboard features
-5. ⏳ Verify WebSocket events still work
 
 ### Phase 3: End-to-End Testing
 

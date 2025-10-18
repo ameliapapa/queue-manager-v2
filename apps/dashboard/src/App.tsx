@@ -112,16 +112,14 @@ function Dashboard() {
             patients={registeredPatients}
             onPatientClick={setSelectedPatient}
           />
-          <div className="space-y-6">
-            <DailyStatsOverview
-              patients={allPatients}
-              assignments={assignments}
-            />
-            <UnregisteredQueueList
-              queue={unregisteredQueue}
-              onRegister={setRegistrationQueueNumber}
-            />
-          </div>
+          <DailyStatsOverview
+            patients={allPatients}
+            assignments={assignments}
+          />
+          <UnregisteredQueueList
+            queue={unregisteredQueue}
+            onRegister={setRegistrationQueueNumber}
+          />
         </section>
       </main>
 

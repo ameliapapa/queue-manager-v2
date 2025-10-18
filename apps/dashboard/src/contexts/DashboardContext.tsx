@@ -185,43 +185,60 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     unsubscribers.push(unsubRooms);
 
     // Listener 4: All patients (for statistics)
+    // ✅ OPTIMIZED: Use snapshot changes to only process modified docs
     const allPatientsQ = query(
       collection(db, 'patients'),
       orderBy('createdAt', 'desc'),
-      limit(500)
+      limit(200) // Reduced from 500
     );
 
     const unsubAllPatients = onSnapshot(
       allPatientsQ,
       (snapshot) => {
-        const patients = snapshot.docs.map(doc => {
-          const data = doc.data();
-          const createdAt = data.createdAt?.toDate();
+        // ✅ OPTIMIZED: Only process changed documents, not all documents
+        setAllPatients(prev => {
+          const patientsMap = new Map(prev.map(p => [p.id, p]));
 
-          // Only include today's patients
-          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
-            return null;
-          }
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+            const createdAt = data.createdAt?.toDate();
 
-          return {
-            id: doc.id,
-            queueNumber: data.queueNumber,
-            name: data.name,
-            phone: data.phone,
-            age: data.age,
-            gender: data.gender,
-            notes: data.notes,
-            status: data.status,
-            registeredAt: data.registeredAt?.toDate(),
-            assignedAt: data.assignedAt?.toDate(),
-            completedAt: data.completedAt?.toDate(),
-            roomId: data.roomId,
-            editHistory: data.editHistory,
-          } as Patient;
-        }).filter(p => p !== null) as Patient[];
+            // Only include today's patients
+            if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+              if (change.type === 'removed' || change.type === 'modified') {
+                patientsMap.delete(doc.id);
+              }
+              return;
+            }
 
-        setAllPatients(patients);
-        console.log('✅ All patients updated:', patients.length);
+            const patient: Patient = {
+              id: doc.id,
+              queueNumber: data.queueNumber,
+              name: data.name,
+              phone: data.phone,
+              age: data.age,
+              gender: data.gender,
+              notes: data.notes,
+              status: data.status,
+              registeredAt: data.registeredAt?.toDate(),
+              assignedAt: data.assignedAt?.toDate(),
+              completedAt: data.completedAt?.toDate(),
+              roomId: data.roomId,
+              editHistory: data.editHistory,
+            };
+
+            if (change.type === 'removed') {
+              patientsMap.delete(doc.id);
+            } else {
+              patientsMap.set(doc.id, patient);
+            }
+          });
+
+          const patients = Array.from(patientsMap.values());
+          console.log('✅ All patients updated (incremental):', patients.length);
+          return patients;
+        });
       },
       (error) => {
         console.error('❌ Error listening to all patients:', error);

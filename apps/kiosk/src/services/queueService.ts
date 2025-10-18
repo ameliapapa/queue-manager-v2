@@ -1,9 +1,14 @@
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@shared/firebase/config';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db, functions } from '../firebase/config';
+import { mockGenerateQueueNumber } from './mockService';
 
 /**
  * Service for queue number generation via Cloud Functions
  */
+
+// Check if we should use mock mode (when emulators aren't running)
+const USE_MOCK_MODE = import.meta.env.VITE_USE_MOCK === 'true' || !import.meta.env.VITE_USE_EMULATORS;
 
 interface GenerateQueueNumberResult {
   success: boolean;
@@ -17,6 +22,12 @@ interface GenerateQueueNumberResult {
  * @returns Promise with queue number data
  */
 export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> {
+  // Use mock mode if emulators aren't available
+  if (USE_MOCK_MODE) {
+    console.log('🔧 Using MOCK mode for queue generation (emulators not connected)');
+    return await mockGenerateQueueNumber();
+  }
+
   try {
     const generateNumber = httpsCallable<void, GenerateQueueNumberResult>(
       functions,
@@ -58,11 +69,6 @@ export async function getQueueStats(): Promise<{
   registered: number;
 }> {
   try {
-    const { db } = await import('@shared/firebase/config');
-    const { collection, query, where, getDocs, Timestamp } = await import(
-      'firebase/firestore'
-    );
-
     // Get today's date at midnight
     const today = new Date();
     today.setHours(0, 0, 0, 0);

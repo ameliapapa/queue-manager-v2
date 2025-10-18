@@ -6,7 +6,7 @@ import { SuccessScreen } from './components/SuccessScreen';
 import { ErrorScreen } from './components/ErrorScreen';
 import { generateQueueNumber, getQueueStats } from './services/queueService';
 import { printTicket } from './services/printService';
-import { UPDATE_INTERVALS } from '@shared/constants';
+import { UPDATE_INTERVALS } from './constants';
 
 // App states
 type AppState = 'IDLE' | 'ACTIVE' | 'GENERATING' | 'PRINTING' | 'SUCCESS' | 'ERROR';

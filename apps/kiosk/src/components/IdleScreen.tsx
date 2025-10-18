@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HOSPITAL_CONFIG } from '@shared/constants';
+import { HOSPITAL_CONFIG } from '../constants';
 
 interface IdleScreenProps {
   onWake: () => void;

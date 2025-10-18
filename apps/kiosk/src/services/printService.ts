@@ -1,5 +1,9 @@
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@shared/firebase/config';
+import { functions } from '../firebase/config';
+import { mockGeneratePrintTicket } from './mockService';
+
+// Check if we should use mock mode
+const USE_MOCK_MODE = import.meta.env.VITE_USE_MOCK === 'true' || !import.meta.env.VITE_USE_EMULATORS;
 
 interface PrintTicketRequest {
   queueNumber: number;
@@ -32,23 +36,31 @@ export async function printTicket(
   patientId: string
 ): Promise<void> {
   try {
-    // Step 1: Generate ticket HTML from Cloud Function
-    const generatePrintTicket = httpsCallable<
-      PrintTicketRequest,
-      PrintTicketResponse
-    >(functions, 'generatePrintTicket');
+    let ticketHtml: string;
 
-    const result = await generatePrintTicket({
-      queueNumber,
-      registrationUrl,
-      patientId,
-    });
+    // Step 1: Generate ticket HTML
+    if (USE_MOCK_MODE) {
+      console.log('🔧 Using MOCK mode for ticket generation (emulators not connected)');
+      const mockResult = await mockGeneratePrintTicket(queueNumber, registrationUrl);
+      ticketHtml = mockResult.ticketHtml;
+    } else {
+      const generatePrintTicket = httpsCallable<
+        PrintTicketRequest,
+        PrintTicketResponse
+      >(functions, 'generatePrintTicket');
 
-    if (!result.data.success) {
-      throw new Error('Failed to generate print ticket');
+      const result = await generatePrintTicket({
+        queueNumber,
+        registrationUrl,
+        patientId,
+      });
+
+      if (!result.data.success) {
+        throw new Error('Failed to generate print ticket');
+      }
+
+      ticketHtml = result.data.ticketHtml;
     }
-
-    const { ticketHtml } = result.data;
 
     // Step 2: Print using browser Print API
     await printUsingBrowserAPI(ticketHtml);

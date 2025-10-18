@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+} from 'firebase/firestore';
+import { db } from '@shared/firebase/config';
+import {
   Room,
   Patient,
   UnregisteredQueue,
@@ -9,7 +18,6 @@ import {
   PatientFormData,
 } from '../types';
 import * as api from '../services/firebaseApi';
-import { useWebSocket } from '../hooks/useWebSocket';
 
 interface DashboardContextType extends DashboardState {
   allPatients: Patient[]; // All patients including completed (for statistics)
@@ -20,7 +28,6 @@ interface DashboardContextType extends DashboardState {
   registerPatient: (queueNumber: number, formData: PatientFormData) => Promise<void>;
   updatePatient: (patientId: string, updates: Partial<PatientFormData>) => Promise<void>;
   cancelPatient: (patientId: string, reason: string) => Promise<void>;
-  refreshData: () => Promise<void>;
   addNotification: (type: Notification['type'], message: string) => void;
   clearNotification: (id: string) => void;
 }
@@ -40,101 +47,194 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // WebSocket connection
-  const { ws, isConnected: wsConnected } = useWebSocket();
-
-  // Load initial data
-  useEffect(() => {
-    refreshData();
-  }, []);
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshData();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // WebSocket event listeners
-  useEffect(() => {
-    if (!ws) return;
-
-    // Listen for queue issued from kiosk
-    const unsubQueue = ws.on('queue:issued', () => {
-      console.log('📢 WebSocket: Queue issued');
-      refreshData();
-    });
-
-    // Listen for patient registration
-    const unsubRegistered = ws.on('patient:registered', (data) => {
-      console.log('📢 WebSocket: Patient registered', data);
-      refreshData();
-      addNotification('success', `${data.name} registered (Q${String(data.queueNumber).padStart(3, '0')})`);
-    });
-
-    // Listen for other dashboard events to sync across multiple dashboards
-    const unsubAssigned = ws.on('patient:assigned', () => {
-      console.log('📢 WebSocket: Patient assigned');
-      refreshData();
-    });
-
-    const unsubCompleted = ws.on('consultation:completed', () => {
-      console.log('📢 WebSocket: Consultation completed');
-      refreshData();
-    });
-
-    const unsubRoomStatus = ws.on('room:status_changed', () => {
-      console.log('📢 WebSocket: Room status changed');
-      refreshData();
-    });
-
-    const unsubCancelled = ws.on('patient:cancelled', () => {
-      console.log('📢 WebSocket: Patient cancelled');
-      refreshData();
-    });
-
-    const unsubUpdated = ws.on('patient:updated', () => {
-      console.log('📢 WebSocket: Patient updated');
-      refreshData();
-    });
-
-    return () => {
-      unsubQueue();
-      unsubRegistered();
-      unsubAssigned();
-      unsubCompleted();
-      unsubRoomStatus();
-      unsubCancelled();
-      unsubUpdated();
-    };
-  }, [ws]);
-
-  const refreshData = async () => {
-    try {
-      const [roomsRes, patientsRes, allPatientsRes, unregRes] = await Promise.all([
-        api.getRooms(),
-        api.getRegisteredPatients(),
-        api.getAllPatients(),
-        api.getUnregisteredQueue(),
-      ]);
-
-      setState(prev => ({
-        ...prev,
-        rooms: roomsRes.data || [],
-        registeredPatients: patientsRes.data || [],
-        unregisteredQueue: unregRes.data || [],
-        isConnected: true,
-        lastSync: new Date(),
-      }));
-
-      setAllPatients(allPatientsRes.data || []);
-    } catch (error) {
-      console.error('Failed to refresh data:', error);
-      setState(prev => ({ ...prev, isConnected: false }));
-    }
+  // Helper function to get today's date string
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   };
+
+  // ✅ OPTIMIZED: Set up Firestore real-time listeners (replaces WebSocket + polling)
+  useEffect(() => {
+    console.log('🔄 Setting up Firestore real-time listeners...');
+
+    const unsubscribers: (() => void)[] = [];
+    const dateString = getTodayDateString();
+
+    // Listener 1: Registered patients
+    const registeredQ = query(
+      collection(db, 'patients'),
+      where('status', '==', 'registered'),
+      orderBy('queueNumber', 'asc'),
+      limit(100)
+    );
+
+    const unsubRegistered = onSnapshot(
+      registeredQ,
+      (snapshot) => {
+        const patients = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate();
+
+          // Only include today's patients
+          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+            return null;
+          }
+
+          return {
+            id: doc.id,
+            queueNumber: data.queueNumber,
+            name: data.name,
+            phone: data.phone,
+            age: data.age,
+            gender: data.gender,
+            notes: data.notes,
+            status: data.status,
+            registeredAt: data.registeredAt?.toDate(),
+            assignedAt: data.assignedAt?.toDate(),
+            completedAt: data.completedAt?.toDate(),
+            roomId: data.roomId,
+            editHistory: data.editHistory,
+          } as Patient;
+        }).filter(p => p !== null) as Patient[];
+
+        setState(prev => ({
+          ...prev,
+          registeredPatients: patients,
+          lastSync: new Date(),
+          isConnected: true,
+        }));
+        console.log('✅ Registered patients updated:', patients.length);
+      },
+      (error) => {
+        console.error('❌ Error listening to registered patients:', error);
+        setState(prev => ({ ...prev, isConnected: false }));
+      }
+    );
+    unsubscribers.push(unsubRegistered);
+
+    // Listener 2: Unregistered patients (status: 'pending')
+    const unregisteredQ = query(
+      collection(db, 'patients'),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
+
+    const unsubUnregistered = onSnapshot(
+      unregisteredQ,
+      (snapshot) => {
+        const queue = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate();
+
+          // Only include today's patients
+          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+            return null;
+          }
+
+          return {
+            id: doc.id,
+            queueNumber: data.queueNumber,
+            issuedAt: data.issuedAt?.toDate() || createdAt,
+          } as UnregisteredQueue;
+        }).filter(q => q !== null) as UnregisteredQueue[];
+
+        setState(prev => ({
+          ...prev,
+          unregisteredQueue: queue,
+        }));
+        console.log('✅ Unregistered queue updated:', queue.length);
+      },
+      (error) => {
+        console.error('❌ Error listening to unregistered queue:', error);
+      }
+    );
+    unsubscribers.push(unsubUnregistered);
+
+    // Listener 3: All rooms
+    const roomsQ = query(
+      collection(db, 'rooms'),
+      orderBy('roomNumber', 'asc')
+    );
+
+    const unsubRooms = onSnapshot(
+      roomsQ,
+      (snapshot) => {
+        const rooms = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            roomNumber: data.roomNumber,
+            doctorName: data.doctorName,
+            status: data.status,
+            currentPatient: data.currentPatient,
+            lastUpdated: data.lastUpdated?.toDate(),
+          } as Room;
+        });
+
+        setState(prev => ({
+          ...prev,
+          rooms,
+        }));
+        console.log('✅ Rooms updated:', rooms.length);
+      },
+      (error) => {
+        console.error('❌ Error listening to rooms:', error);
+      }
+    );
+    unsubscribers.push(unsubRooms);
+
+    // Listener 4: All patients (for statistics)
+    const allPatientsQ = query(
+      collection(db, 'patients'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+
+    const unsubAllPatients = onSnapshot(
+      allPatientsQ,
+      (snapshot) => {
+        const patients = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const createdAt = data.createdAt?.toDate();
+
+          // Only include today's patients
+          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+            return null;
+          }
+
+          return {
+            id: doc.id,
+            queueNumber: data.queueNumber,
+            name: data.name,
+            phone: data.phone,
+            age: data.age,
+            gender: data.gender,
+            notes: data.notes,
+            status: data.status,
+            registeredAt: data.registeredAt?.toDate(),
+            assignedAt: data.assignedAt?.toDate(),
+            completedAt: data.completedAt?.toDate(),
+            roomId: data.roomId,
+            editHistory: data.editHistory,
+          } as Patient;
+        }).filter(p => p !== null) as Patient[];
+
+        setAllPatients(patients);
+        console.log('✅ All patients updated:', patients.length);
+      },
+      (error) => {
+        console.error('❌ Error listening to all patients:', error);
+      }
+    );
+    unsubscribers.push(unsubAllPatients);
+
+    // Cleanup: unsubscribe from all listeners on unmount
+    return () => {
+      console.log('🧹 Cleaning up Firestore listeners...');
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, []); // ✅ Only run ONCE on mount
 
   const addNotification = (type: Notification['type'], message: string) => {
     const notification: Notification = {
@@ -161,7 +261,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const assignPatient = async (patientId: string, roomId: string) => {
     const result = await api.assignPatientToRoom(patientId, roomId);
     if (result.success) {
-      await refreshData();
+      // ✅ No need to refresh - Firestore listeners will update automatically
       addNotification('success', 'Patient assigned successfully');
     } else {
       addNotification('error', result.error || 'Failed to assign patient');
@@ -172,7 +272,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const completeConsultation = async (roomId: string) => {
     const result = await api.completeConsultation(roomId);
     if (result.success) {
-      await refreshData();
+      // ✅ Real-time listeners will update automatically
       addNotification('success', 'Consultation completed');
     } else {
       addNotification('error', result.error || 'Failed to complete consultation');
@@ -183,7 +283,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const toggleRoomPause = async (roomId: string) => {
     const result = await api.toggleRoomPause(roomId);
     if (result.success) {
-      await refreshData();
+      // ✅ Real-time listeners will update automatically
       addNotification('info', `Room ${result.data?.status === 'paused' ? 'paused' : 'resumed'}`);
     } else {
       addNotification('error', result.error || 'Failed to toggle room status');
@@ -194,7 +294,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const registerPatient = async (queueNumber: number, formData: PatientFormData) => {
     const result = await api.registerPatient(queueNumber, formData);
     if (result.success) {
-      await refreshData();
+      // ✅ Real-time listeners will update automatically
       addNotification('success', 'Patient registered successfully');
     } else {
       addNotification('error', result.error || 'Failed to register patient');
@@ -205,7 +305,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const updatePatient = async (patientId: string, updates: Partial<PatientFormData>) => {
     const result = await api.updatePatient(patientId, updates);
     if (result.success) {
-      await refreshData();
+      // ✅ Real-time listeners will update automatically
       addNotification('success', 'Patient details updated');
     } else {
       addNotification('error', result.error || 'Failed to update patient');
@@ -216,7 +316,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const cancelPatient = async (patientId: string, reason: string) => {
     const result = await api.cancelPatient(patientId, reason);
     if (result.success) {
-      await refreshData();
+      // ✅ Real-time listeners will update automatically
       addNotification('warning', 'Patient cancelled');
     } else {
       addNotification('error', result.error || 'Failed to cancel patient');
@@ -236,7 +336,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         registerPatient,
         updatePatient,
         cancelPatient,
-        refreshData,
         addNotification,
         clearNotification,
       }}

@@ -67,7 +67,7 @@ function App() {
     setError(null);
 
     try {
-      // Step 1: Generate queue number via Cloud Function
+      // Step 1: Generate queue number (PURE MOCK MODE)
       const result = await generateQueueNumber();
 
       setQueueData({
@@ -82,7 +82,8 @@ function App() {
       await printTicket(
         result.queueNumber,
         result.registrationUrl,
-        result.patientId
+        result.patientId,
+        result.qrCodeDataUrl // Pass the QR code data URL
       );
 
       // Step 3: Show success

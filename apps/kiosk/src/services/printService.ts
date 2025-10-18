@@ -1,75 +1,214 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase/config';
-import { mockGeneratePrintTicket } from './mockService';
-
-// Check if we should use mock mode
-const USE_MOCK_MODE = import.meta.env.VITE_USE_MOCK === 'true' || !import.meta.env.VITE_USE_EMULATORS;
-
-interface PrintTicketRequest {
-  queueNumber: number;
-  registrationUrl: string;
-  patientId: string;
-}
-
-interface PrintTicketResponse {
-  success: boolean;
-  ticketHtml: string;
-  qrCodeDataUrl: string;
-  printJobId: string;
-  timestamp: string;
-}
-
 /**
- * Service for printing queue tickets on thermal printer
+ * Print Service - Pure Mock Mode
+ * Generates printable tickets using mock data (no Firebase)
  */
 
 /**
- * Generate and print a ticket
+ * Generate and print a ticket (PURE MOCK MODE)
  * @param queueNumber The queue number to print
  * @param registrationUrl The URL for patient registration
  * @param patientId The patient document ID
+ * @param qrCodeDataUrl Optional QR code data URL (if already generated)
  * @returns Promise that resolves when print is complete
  */
 export async function printTicket(
   queueNumber: number,
   registrationUrl: string,
-  patientId: string
+  patientId: string,
+  qrCodeDataUrl?: string
 ): Promise<void> {
+  console.log('🖨️  Printing ticket in PURE MOCK MODE');
+  console.log('  Queue Number:', queueNumber);
+  console.log('  Registration URL:', registrationUrl);
+
   try {
-    let ticketHtml: string;
+    // Simulate ticket generation delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Step 1: Generate ticket HTML
-    if (USE_MOCK_MODE) {
-      console.log('🔧 Using MOCK mode for ticket generation (emulators not connected)');
-      const mockResult = await mockGeneratePrintTicket(queueNumber, registrationUrl);
-      ticketHtml = mockResult.ticketHtml;
-    } else {
-      const generatePrintTicket = httpsCallable<
-        PrintTicketRequest,
-        PrintTicketResponse
-      >(functions, 'generatePrintTicket');
+    // Generate ticket HTML
+    const ticketHtml = generateTicketHTML(
+      queueNumber,
+      registrationUrl,
+      qrCodeDataUrl
+    );
 
-      const result = await generatePrintTicket({
-        queueNumber,
-        registrationUrl,
-        patientId,
-      });
+    console.log('✅ Ticket HTML generated');
 
-      if (!result.data.success) {
-        throw new Error('Failed to generate print ticket');
-      }
-
-      ticketHtml = result.data.ticketHtml;
-    }
-
-    // Step 2: Print using browser Print API
+    // Print using browser Print API
     await printUsingBrowserAPI(ticketHtml);
+
+    console.log('✅ Print command sent successfully');
   } catch (error: any) {
-    console.error('Error printing ticket:', error);
+    console.error('❌ Error printing ticket:', error);
     throw new Error(
       error.message || 'Failed to print ticket. Please contact staff.'
     );
   }
+}
+
+/**
+ * Generate HTML for ticket printing
+ */
+function generateTicketHTML(
+  queueNumber: number,
+  registrationUrl: string,
+  qrCodeDataUrl?: string
+): string {
+  const timestamp = new Date().toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  // Use provided QR code or generate a simple placeholder
+  const qrCode =
+    qrCodeDataUrl ||
+    `data:image/svg+xml;base64,${btoa(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+      <rect width="200" height="200" fill="white"/>
+      <rect x="40" y="40" width="120" height="120" fill="black"/>
+      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-family="Arial">Q${String(queueNumber).padStart(3, '0')}</text>
+    </svg>
+  `)}`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: 80mm 120mm;
+      margin: 5mm;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      width: 80mm;
+      padding: 5mm;
+      background: white;
+    }
+
+    .ticket {
+      text-align: center;
+      border: 2px solid #000;
+      padding: 10px;
+    }
+
+    .header {
+      border-bottom: 2px dashed #000;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .hospital-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .timestamp {
+      font-size: 10px;
+      color: #666;
+    }
+
+    .queue-section {
+      margin: 20px 0;
+    }
+
+    .queue-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .queue-number {
+      font-size: 48px;
+      font-weight: bold;
+      color: #000;
+      letter-spacing: 2px;
+    }
+
+    .qr-section {
+      margin: 20px 0;
+      padding: 10px 0;
+      border-top: 2px dashed #000;
+      border-bottom: 2px dashed #000;
+    }
+
+    .qr-label {
+      font-size: 11px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .qr-code {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+    }
+
+    .instructions {
+      font-size: 10px;
+      line-height: 1.4;
+      margin: 10px 0;
+      padding: 0 5px;
+    }
+
+    .footer {
+      font-size: 9px;
+      color: #666;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="header">
+      <div class="hospital-name">City General Hospital</div>
+      <div class="timestamp">${timestamp}</div>
+    </div>
+
+    <div class="queue-section">
+      <div class="queue-label">Your Queue Number</div>
+      <div class="queue-number">Q${String(queueNumber).padStart(3, '0')}</div>
+    </div>
+
+    <div class="qr-section">
+      <div class="qr-label">Scan to Register</div>
+      <img src="${qrCode}" alt="QR Code" class="qr-code">
+    </div>
+
+    <div class="instructions">
+      Please scan the QR code above to complete your registration. You will be called when it's your turn.
+    </div>
+
+    <div class="footer">
+      Thank you for your patience
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
 }
 
 /**
@@ -79,6 +218,8 @@ export async function printTicket(
 async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
+      console.log('🖨️  Creating print iframe...');
+
       // Create hidden iframe for printing
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
@@ -105,14 +246,19 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
           iframeDocument.write(htmlContent);
           iframeDocument.close();
 
+          console.log('✅ Ticket loaded into iframe');
+
           // Wait for content to render
           setTimeout(() => {
             try {
+              console.log('🖨️  Opening print dialog...');
+
               // Trigger print
               iframeWindow.print();
 
               // Listen for print completion
               iframeWindow.onafterprint = () => {
+                console.log('✅ Print dialog closed');
                 document.body.removeChild(iframe);
                 resolve();
               };
@@ -120,16 +266,19 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
               // Fallback: remove iframe after delay
               setTimeout(() => {
                 if (document.body.contains(iframe)) {
+                  console.log('⏱️  Print timeout - cleaning up iframe');
                   document.body.removeChild(iframe);
                   resolve();
                 }
               }, 3000);
             } catch (printError) {
+              console.error('❌ Print error:', printError);
               document.body.removeChild(iframe);
               reject(printError);
             }
           }, 500);
         } catch (error) {
+          console.error('❌ Iframe content error:', error);
           document.body.removeChild(iframe);
           reject(error);
         }
@@ -137,6 +286,7 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
 
       // Handle iframe load error
       iframe.onerror = () => {
+        console.error('❌ Failed to load iframe');
         document.body.removeChild(iframe);
         reject(new Error('Failed to load print content'));
       };
@@ -144,6 +294,7 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
       // Set iframe source to trigger onload
       iframe.src = 'about:blank';
     } catch (error) {
+      console.error('❌ Print setup error:', error);
       reject(error);
     }
   });
@@ -157,11 +308,11 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
 export function isPrinterAvailable(): boolean {
   // Check if print API is available
   if (!window.print) {
+    console.warn('⚠️  Print API not available');
     return false;
   }
 
-  // In production, you might check for specific printer via WebUSB
-  // or other APIs, but for now we assume if print API exists, printer is available
+  console.log('✅ Print API available');
   return true;
 }
 
@@ -171,32 +322,28 @@ export function isPrinterAvailable(): boolean {
 export async function previewTicket(
   queueNumber: number,
   registrationUrl: string,
-  patientId: string
+  qrCodeDataUrl?: string
 ): Promise<void> {
-  try {
-    const generatePrintTicket = httpsCallable<
-      PrintTicketRequest,
-      PrintTicketResponse
-    >(functions, 'generatePrintTicket');
+  console.log('👁️  Opening ticket preview');
 
-    const result = await generatePrintTicket({
+  try {
+    const ticketHtml = generateTicketHTML(
       queueNumber,
       registrationUrl,
-      patientId,
-    });
-
-    if (!result.data.success) {
-      throw new Error('Failed to generate ticket preview');
-    }
+      qrCodeDataUrl
+    );
 
     // Open in new window for preview
     const previewWindow = window.open('', '_blank', 'width=400,height=600');
     if (previewWindow) {
-      previewWindow.document.write(result.data.ticketHtml);
+      previewWindow.document.write(ticketHtml);
       previewWindow.document.close();
+      console.log('✅ Preview window opened');
+    } else {
+      console.error('❌ Failed to open preview window (popup blocked?)');
     }
   } catch (error) {
-    console.error('Error previewing ticket:', error);
+    console.error('❌ Error previewing ticket:', error);
     throw error;
   }
 }

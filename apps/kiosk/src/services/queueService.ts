@@ -72,11 +72,11 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
   }
 
   // Store patient in mock database
-  savePatientToMockDB(queueNumber, patientId, registrationUrl);
+  savePatientToMockDB(queueCounter, patientId, registrationUrl);
 
   return {
     success: true,
-    queueNumber,
+    queueNumber: queueCounter,
     patientId,
     registrationUrl,
     qrCodeDataUrl,

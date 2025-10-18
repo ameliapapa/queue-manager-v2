@@ -328,10 +328,10 @@ export async function toggleRoomPause(roomId: string): Promise<ApiResponse<Room>
       lastUpdated: serverTimestamp(),
     });
 
-    const updatedRoom = { ...room, status: newStatus, lastUpdated: new Date() };
-
+    // ✅ OPTIMIZED: Return minimal data (just status for notification)
+    // Firestore listeners will update UI with full room data
     console.log(`✅ Room ${newStatus === 'paused' ? 'paused' : 'unpaused'}`);
-    return { success: true, data: updatedRoom };
+    return { success: true, data: { status: newStatus } as any };
   } catch (error) {
     console.error('❌ Error toggling room pause:', error);
     return { success: false, error: 'Failed to toggle room pause' };
@@ -375,15 +375,10 @@ export async function registerPatient(
       registeredAt: serverTimestamp(),
     });
 
-    // Get updated patient
-    const updatedDoc = await getDoc(patientRef);
-    const patient = convertTimestamps<Patient>({
-      id: updatedDoc.id,
-      ...updatedDoc.data()
-    });
-
+    // ✅ OPTIMIZED: No need to fetch updated patient - Firestore listeners will handle UI updates
+    // This removes an unnecessary read operation and improves performance
     console.log('✅ Patient registered successfully');
-    return { success: true, data: patient };
+    return { success: true, data: null as any }; // Data not needed - listener updates UI
   } catch (error) {
     console.error('❌ Error registering patient:', error);
     return { success: false, error: 'Failed to register patient' };
@@ -413,15 +408,10 @@ export async function updatePatient(
       lastUpdated: serverTimestamp(),
     });
 
-    // Get updated patient
-    const updatedDoc = await getDoc(patientRef);
-    const patient = convertTimestamps<Patient>({
-      id: updatedDoc.id,
-      ...updatedDoc.data()
-    });
-
+    // ✅ OPTIMIZED: No need to fetch updated patient - Firestore listeners will handle UI updates
+    // This removes an unnecessary read operation and improves performance
     console.log('✅ Patient updated successfully');
-    return { success: true, data: patient };
+    return { success: true, data: null as any }; // Data not needed - listener updates UI
   } catch (error) {
     console.error('❌ Error updating patient:', error);
     return { success: false, error: 'Failed to update patient' };

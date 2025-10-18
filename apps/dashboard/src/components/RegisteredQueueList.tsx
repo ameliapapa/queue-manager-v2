@@ -15,9 +15,11 @@ export default function RegisteredQueueList({ patients, onPatientClick }: Regist
     p.queueNumber.toString().includes(searchTerm)
   );
 
-  const sortedPatients = [...filteredPatients].sort((a, b) =>
-    new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime()
-  );
+  const sortedPatients = [...filteredPatients].sort((a, b) => {
+    const timeA = a.registeredAt ? new Date(a.registeredAt).getTime() : 0;
+    const timeB = b.registeredAt ? new Date(b.registeredAt).getTime() : 0;
+    return timeA - timeB;
+  });
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
@@ -71,7 +73,9 @@ export default function RegisteredQueueList({ patients, onPatientClick }: Regist
                     <span>{patient.age} years</span>
                     <span className="capitalize">{patient.gender}</span>
                     <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                      {formatDistanceToNow(new Date(patient.registeredAt), { addSuffix: true })}
+                      {patient.registeredAt
+                        ? formatDistanceToNow(new Date(patient.registeredAt), { addSuffix: true })
+                        : 'Just now'}
                     </span>
                   </div>
                   {patient.notes && (

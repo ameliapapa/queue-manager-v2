@@ -60,7 +60,9 @@ export default function UnregisteredQueueList({ queue, onRegister }: Unregistere
                     )}
                   </div>
                   <span className={`text-sm ${urgent ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>
-                    {formatDistanceToNow(new Date(item.issuedAt), { addSuffix: true })}
+                    {item.issuedAt
+                      ? formatDistanceToNow(new Date(item.issuedAt), { addSuffix: true })
+                      : 'Just now'}
                   </span>
                 </div>
 

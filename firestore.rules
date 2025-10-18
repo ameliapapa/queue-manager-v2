@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isReceptionist() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'receptionist';
+    }
+
+    // Queue counter - read for all, write only via cloud function
+    match /queueCounter/{date} {
+      allow read: if true;
+      allow write: if false; // Only cloud functions can write
+    }
+
+    // Patients collection
+    match /patients/{patientId} {
+      // Anyone can read patients (for TV display, kiosk status)
+      allow read: if true;
+
+      // Only cloud functions can create new patients (from kiosk)
+      allow create: if false;
+
+      // Patients can update their own registration data
+      allow update: if !isAuthenticated() &&
+                      resource.data.status == 'unregistered' &&
+                      request.resource.data.status == 'registered' &&
+                      request.resource.data.queueNumber == resource.data.queueNumber;
+
+      // Receptionists can update any patient
+      allow update: if isReceptionist();
+
+      // No deletion allowed
+      allow delete: if false;
+    }
+
+    // Rooms collection
+    match /rooms/{roomId} {
+      // Anyone can read rooms (for TV display)
+      allow read: if true;
+
+      // Only receptionists can update rooms
+      allow create, update, delete: if isReceptionist();
+    }
+
+    // Users collection (for receptionist authentication)
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false; // Only admins via Firebase console
+    }
+
+    // Print jobs (for tracking print status)
+    match /printJobs/{jobId} {
+      allow read: if true;
+      allow create: if false; // Only cloud functions
+      allow update, delete: if false;
+    }
+  }
+}

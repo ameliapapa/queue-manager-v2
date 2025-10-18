@@ -1,0 +1,37 @@
+[
+  {
+    "id": "room1",
+    "roomNumber": 1,
+    "doctorName": "Dr. Sarah Smith",
+    "status": "available",
+    "currentPatientQueue": null
+  },
+  {
+    "id": "room2",
+    "roomNumber": 2,
+    "doctorName": "Dr. John Anderson",
+    "status": "available",
+    "currentPatientQueue": null
+  },
+  {
+    "id": "room3",
+    "roomNumber": 3,
+    "doctorName": "Dr. Emily Johnson",
+    "status": "available",
+    "currentPatientQueue": null
+  },
+  {
+    "id": "room4",
+    "roomNumber": 4,
+    "doctorName": "Dr. Michael Chen",
+    "status": "available",
+    "currentPatientQueue": null
+  },
+  {
+    "id": "room5",
+    "roomNumber": 5,
+    "doctorName": "Dr. Lisa Williams",
+    "status": "available",
+    "currentPatientQueue": null
+  }
+]

@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-white antialiased;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gray-800 rounded-xl shadow-lg p-6;
+  }
+
+  .queue-number {
+    @apply text-7xl font-bold text-primary-400;
+  }
+
+  .room-card {
+    @apply bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-xl p-8 border border-gray-700;
+  }
+
+  .status-available {
+    @apply bg-green-500;
+  }
+
+  .status-occupied {
+    @apply bg-red-500;
+  }
+
+  .status-paused {
+    @apply bg-yellow-500;
+  }
+}
+
+/* Smooth transitions for real-time updates */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}

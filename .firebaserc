@@ -1,0 +1,23 @@
+{
+  "projects": {
+    "default": "your-project-id"
+  },
+  "targets": {
+    "your-project-id": {
+      "hosting": {
+        "kiosk": [
+          "your-project-id-kiosk"
+        ],
+        "patient-registration": [
+          "your-project-id-patient"
+        ],
+        "receptionist-dashboard": [
+          "your-project-id-receptionist"
+        ],
+        "tv-display": [
+          "your-project-id-tv"
+        ]
+      }
+    }
+  }
+}

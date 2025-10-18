@@ -57,7 +57,6 @@ function getTodayDateString(): string {
  */
 export async function getRooms(): Promise<ApiResponse<Room[]>> {
   try {
-    console.log('📊 Fetching rooms from Firestore');
 
     const roomsRef = collection(db, 'rooms');
     const querySnapshot = await getDocs(roomsRef);
@@ -68,7 +67,6 @@ export async function getRooms(): Promise<ApiResponse<Room[]>> {
       rooms.push(roomData);
     });
 
-    console.log(`✅ Fetched ${rooms.length} rooms`);
     return { success: true, data: rooms };
   } catch (error) {
     console.error('❌ Error fetching rooms:', error);
@@ -81,7 +79,6 @@ export async function getRooms(): Promise<ApiResponse<Room[]>> {
  */
 export async function getAllPatients(): Promise<ApiResponse<Patient[]>> {
   try {
-    console.log('📊 Fetching all patients from Firestore');
 
     const dateString = getTodayDateString();
     const patientsRef = collection(db, 'patients');
@@ -102,7 +99,6 @@ export async function getAllPatients(): Promise<ApiResponse<Patient[]>> {
       }
     });
 
-    console.log(`✅ Fetched ${patients.length} patients`);
     return { success: true, data: patients };
   } catch (error) {
     console.error('❌ Error fetching patients:', error);
@@ -115,7 +111,6 @@ export async function getAllPatients(): Promise<ApiResponse<Patient[]>> {
  */
 export async function getRegisteredPatients(): Promise<ApiResponse<Patient[]>> {
   try {
-    console.log('📊 Fetching registered patients from Firestore');
 
     const dateString = getTodayDateString();
     const patientsRef = collection(db, 'patients');
@@ -137,7 +132,6 @@ export async function getRegisteredPatients(): Promise<ApiResponse<Patient[]>> {
       }
     });
 
-    console.log(`✅ Fetched ${patients.length} registered patients`);
     return { success: true, data: patients };
   } catch (error) {
     console.error('❌ Error fetching registered patients:', error);
@@ -150,7 +144,6 @@ export async function getRegisteredPatients(): Promise<ApiResponse<Patient[]>> {
  */
 export async function getUnregisteredQueue(): Promise<ApiResponse<UnregisteredQueue[]>> {
   try {
-    console.log('📊 Fetching unregistered queue from Firestore');
 
     const dateString = getTodayDateString();
     const patientsRef = collection(db, 'patients');
@@ -172,7 +165,6 @@ export async function getUnregisteredQueue(): Promise<ApiResponse<UnregisteredQu
       }
     });
 
-    console.log(`✅ Fetched ${queue.length} unregistered queue entries`);
     return { success: true, data: queue };
   } catch (error) {
     console.error('❌ Error fetching unregistered queue:', error);
@@ -188,7 +180,6 @@ export async function assignPatientToRoom(
   roomId: string
 ): Promise<ApiResponse<Assignment>> {
   try {
-    console.log(`🏥 Assigning patient ${patientId} to room ${roomId}`);
 
     // Get room and patient documents
     const roomRef = doc(db, 'rooms', roomId);
@@ -251,7 +242,6 @@ export async function assignPatientToRoom(
       calledAt: serverTimestamp(),
     });
 
-    console.log('✅ Patient assigned successfully');
     return { success: true, data: assignment };
   } catch (error) {
     console.error('❌ Error assigning patient:', error);
@@ -264,7 +254,6 @@ export async function assignPatientToRoom(
  */
 export async function completeConsultation(roomId: string): Promise<ApiResponse<void>> {
   try {
-    console.log(`✅ Completing consultation in room ${roomId}`);
 
     const roomRef = doc(db, 'rooms', roomId);
     const roomDoc = await getDoc(roomRef);
@@ -293,7 +282,6 @@ export async function completeConsultation(roomId: string): Promise<ApiResponse<
       lastUpdated: serverTimestamp(),
     });
 
-    console.log('✅ Consultation completed');
     return { success: true };
   } catch (error) {
     console.error('❌ Error completing consultation:', error);
@@ -306,7 +294,6 @@ export async function completeConsultation(roomId: string): Promise<ApiResponse<
  */
 export async function toggleRoomPause(roomId: string): Promise<ApiResponse<Room>> {
   try {
-    console.log(`⏸️ Toggling pause for room ${roomId}`);
 
     const roomRef = doc(db, 'rooms', roomId);
     const roomDoc = await getDoc(roomRef);
@@ -330,7 +317,6 @@ export async function toggleRoomPause(roomId: string): Promise<ApiResponse<Room>
 
     // ✅ OPTIMIZED: Return minimal data (just status for notification)
     // Firestore listeners will update UI with full room data
-    console.log(`✅ Room ${newStatus === 'paused' ? 'paused' : 'unpaused'}`);
     return { success: true, data: { status: newStatus } as any };
   } catch (error) {
     console.error('❌ Error toggling room pause:', error);
@@ -346,7 +332,6 @@ export async function registerPatient(
   formData: PatientFormData
 ): Promise<ApiResponse<Patient>> {
   try {
-    console.log(`📝 Registering patient with queue number ${queueNumber}`);
 
     // Find patient by queue number with status 'pending'
     const patientsRef = collection(db, 'patients');
@@ -377,7 +362,6 @@ export async function registerPatient(
 
     // ✅ OPTIMIZED: No need to fetch updated patient - Firestore listeners will handle UI updates
     // This removes an unnecessary read operation and improves performance
-    console.log('✅ Patient registered successfully');
     return { success: true, data: null as any }; // Data not needed - listener updates UI
   } catch (error) {
     console.error('❌ Error registering patient:', error);
@@ -393,7 +377,6 @@ export async function updatePatient(
   updates: Partial<PatientFormData>
 ): Promise<ApiResponse<Patient>> {
   try {
-    console.log(`✏️ Updating patient ${patientId}`);
 
     const patientRef = doc(db, 'patients', patientId);
     const patientDoc = await getDoc(patientRef);
@@ -410,7 +393,6 @@ export async function updatePatient(
 
     // ✅ OPTIMIZED: No need to fetch updated patient - Firestore listeners will handle UI updates
     // This removes an unnecessary read operation and improves performance
-    console.log('✅ Patient updated successfully');
     return { success: true, data: null as any }; // Data not needed - listener updates UI
   } catch (error) {
     console.error('❌ Error updating patient:', error);
@@ -426,7 +408,6 @@ export async function cancelPatient(
   reason: string
 ): Promise<ApiResponse<void>> {
   try {
-    console.log(`❌ Cancelling patient ${patientId}`);
 
     const patientRef = doc(db, 'patients', patientId);
     const patientDoc = await getDoc(patientRef);
@@ -444,7 +425,6 @@ export async function cancelPatient(
       cancelledAt: serverTimestamp(),
     });
 
-    console.log('✅ Patient cancelled successfully');
     return { success: true };
   } catch (error) {
     console.error('❌ Error cancelling patient:', error);
@@ -457,7 +437,6 @@ export async function cancelPatient(
  */
 export async function initializeSampleRooms() {
   try {
-    console.log('🏥 Initializing sample rooms in Firestore');
 
     const sampleRooms = [
       {
@@ -506,7 +485,6 @@ export async function initializeSampleRooms() {
       });
     }
 
-    console.log('✅ Sample rooms initialized');
   } catch (error) {
     console.error('❌ Error initializing sample rooms:', error);
   }
@@ -515,6 +493,8 @@ export async function initializeSampleRooms() {
 // Expose debug function globally for easy testing
 if (typeof window !== 'undefined') {
   (window as any).initRooms = initializeSampleRooms;
-  console.log('🔧 Debug commands available:');
-  console.log('  - window.initRooms() - Initialize sample rooms in Firestore');
+  if (import.meta.env.DEV) {
+    console.log('🔧 Debug commands available:');
+    console.log('  - window.initRooms() - Initialize sample rooms in Firestore');
+  }
 }

@@ -34,7 +34,6 @@ function App() {
 
   // Start midnight reset service
   useEffect(() => {
-    console.log('🌙 Starting midnight reset service for Kiosk');
     midnightResetService.start();
 
     return () => {
@@ -44,8 +43,6 @@ function App() {
 
   // ✅ OPTIMIZED: Real-time queue stats listener (replaces polling)
   useEffect(() => {
-    console.log('📊 Setting up real-time queue stats listener...');
-
     // Get today's date string
     const getTodayDateString = () => {
       const today = new Date();
@@ -72,12 +69,6 @@ function App() {
             pending: estimatedPending,
             registered: estimatedRegistered,
           });
-
-          console.log('📊 Queue stats updated (real-time):', {
-            totalToday,
-            pending: estimatedPending,
-            registered: estimatedRegistered,
-          });
         } else {
           // Counter doesn't exist yet (first patient of the day)
           setQueueStats({
@@ -85,7 +76,6 @@ function App() {
             pending: 0,
             registered: 0,
           });
-          console.log('📊 Queue counter not initialized yet (0 patients)');
         }
       },
       (error) => {
@@ -101,7 +91,6 @@ function App() {
 
     // Cleanup listener on unmount
     return () => {
-      console.log('🧹 Cleaning up queue stats listener');
       unsubscribe();
     };
   }, []); // ✅ Only run ONCE on mount

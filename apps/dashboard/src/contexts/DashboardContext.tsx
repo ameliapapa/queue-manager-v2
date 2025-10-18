@@ -55,8 +55,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   // ✅ OPTIMIZED: Set up Firestore real-time listeners (replaces WebSocket + polling)
   useEffect(() => {
-    console.log('🔄 Setting up Firestore real-time listeners...');
-
     const unsubscribers: (() => void)[] = [];
     const dateString = getTodayDateString();
 
@@ -113,7 +111,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           });
 
           const patients = Array.from(patientsMap.values());
-          console.log('✅ Registered patients updated (incremental):', patients.length);
 
           return {
             ...prev,
@@ -173,7 +170,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           });
 
           const queue = Array.from(queueMap.values());
-          console.log('✅ Unregistered queue updated (incremental):', queue.length);
 
           return {
             ...prev,
@@ -212,7 +208,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           ...prev,
           rooms,
         }));
-        console.log('✅ Rooms updated:', rooms.length);
       },
       (error) => {
         console.error('❌ Error listening to rooms:', error);
@@ -272,7 +267,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           });
 
           const patients = Array.from(patientsMap.values());
-          console.log('✅ All patients updated (incremental):', patients.length);
           return patients;
         });
       },
@@ -284,7 +278,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
     // Cleanup: unsubscribe from all listeners on unmount
     return () => {
-      console.log('🧹 Cleaning up Firestore listeners...');
       unsubscribers.forEach(unsub => unsub());
     };
   }, []); // ✅ Only run ONCE on mount

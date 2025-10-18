@@ -18,9 +18,6 @@ export async function printTicket(
   patientId: string,
   qrCodeDataUrl?: string
 ): Promise<void> {
-  console.log('🖨️  Printing ticket');
-  console.log('  Queue Number:', queueNumber);
-  console.log('  Registration URL:', registrationUrl);
 
   try {
     // Simulate ticket generation delay
@@ -33,12 +30,10 @@ export async function printTicket(
       qrCodeDataUrl
     );
 
-    console.log('✅ Ticket HTML generated');
 
     // Print using browser Print API
     await printUsingBrowserAPI(ticketHtml);
 
-    console.log('✅ Print command sent successfully');
   } catch (error: any) {
     console.error('❌ Error printing ticket:', error);
     throw new Error(
@@ -220,7 +215,6 @@ function generateTicketHTML(
 async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      console.log('🖨️  Creating print iframe...');
 
       // Create hidden iframe for printing
       const iframe = document.createElement('iframe');
@@ -248,19 +242,16 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
           iframeDocument.write(htmlContent);
           iframeDocument.close();
 
-          console.log('✅ Ticket loaded into iframe');
 
           // Wait for content to render
           setTimeout(() => {
             try {
-              console.log('🖨️  Opening print dialog...');
 
               // Trigger print
               iframeWindow.print();
 
               // Listen for print completion
               iframeWindow.onafterprint = () => {
-                console.log('✅ Print dialog closed');
                 document.body.removeChild(iframe);
                 resolve();
               };
@@ -268,7 +259,6 @@ async function printUsingBrowserAPI(htmlContent: string): Promise<void> {
               // Fallback: remove iframe after delay
               setTimeout(() => {
                 if (document.body.contains(iframe)) {
-                  console.log('⏱️  Print timeout - cleaning up iframe');
                   document.body.removeChild(iframe);
                   resolve();
                 }
@@ -314,7 +304,6 @@ export function isPrinterAvailable(): boolean {
     return false;
   }
 
-  console.log('✅ Print API available');
   return true;
 }
 
@@ -326,7 +315,6 @@ export async function previewTicket(
   registrationUrl: string,
   qrCodeDataUrl?: string
 ): Promise<void> {
-  console.log('👁️  Opening ticket preview');
 
   try {
     const ticketHtml = generateTicketHTML(
@@ -340,7 +328,6 @@ export async function previewTicket(
     if (previewWindow) {
       previewWindow.document.write(ticketHtml);
       previewWindow.document.close();
-      console.log('✅ Preview window opened');
     } else {
       console.error('❌ Failed to open preview window (popup blocked?)');
     }

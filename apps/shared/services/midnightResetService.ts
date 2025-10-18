@@ -48,9 +48,11 @@ class MidnightResetService {
     const currentDate = this.getTodayDateString();
 
     if (currentDate !== this.lastCheckedDate) {
-      console.log('🌅 NEW DAY DETECTED!');
-      console.log(`Previous date: ${this.lastCheckedDate}`);
-      console.log(`Current date: ${currentDate}`);
+      if (import.meta.env.DEV) {
+        console.log('🌅 NEW DAY DETECTED!');
+        console.log(`Previous date: ${this.lastCheckedDate}`);
+        console.log(`Current date: ${currentDate}`);
+      }
 
       this.lastCheckedDate = currentDate;
       this.handleMidnightReset();
@@ -61,8 +63,6 @@ class MidnightResetService {
    * Handle midnight reset
    */
   private handleMidnightReset(): void {
-    console.log('🔄 Executing midnight reset...');
-
     // Execute all registered callbacks
     this.callbacks.forEach((callback) => {
       try {
@@ -77,7 +77,6 @@ class MidnightResetService {
 
     // Reload the page after a short delay to fetch fresh data
     setTimeout(() => {
-      console.log('🔄 Reloading page for new day...');
       window.location.reload();
     }, 2000);
   }
@@ -145,17 +144,21 @@ class MidnightResetService {
    */
   public start(): void {
     if (this.checkInterval) {
-      console.warn('⚠️ Midnight reset service already running');
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Midnight reset service already running');
+      }
       return;
     }
 
-    console.log('🌙 Starting midnight reset service...');
-    console.log(`Current date: ${this.lastCheckedDate}`);
+    if (import.meta.env.DEV) {
+      console.log('🌙 Starting midnight reset service...');
+      console.log(`Current date: ${this.lastCheckedDate}`);
 
-    const msUntilMidnight = this.getMillisecondsUntilMidnight();
-    const hours = Math.floor(msUntilMidnight / (1000 * 60 * 60));
-    const minutes = Math.floor((msUntilMidnight % (1000 * 60 * 60)) / (1000 * 60));
-    console.log(`⏰ Next midnight in: ${hours}h ${minutes}m`);
+      const msUntilMidnight = this.getMillisecondsUntilMidnight();
+      const hours = Math.floor(msUntilMidnight / (1000 * 60 * 60));
+      const minutes = Math.floor((msUntilMidnight % (1000 * 60 * 60)) / (1000 * 60));
+      console.log(`⏰ Next midnight in: ${hours}h ${minutes}m`);
+    }
 
     // Check every minute if the date has changed
     // This is more reliable than trying to calculate exact midnight
@@ -172,7 +175,9 @@ class MidnightResetService {
    */
   public stop(): void {
     if (this.checkInterval) {
-      console.log('🛑 Stopping midnight reset service...');
+      if (import.meta.env.DEV) {
+        console.log('🛑 Stopping midnight reset service...');
+      }
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
@@ -214,7 +219,9 @@ export const midnightResetService = new MidnightResetService();
 // Make available globally for debugging
 if (typeof window !== 'undefined') {
   (window as any).midnightReset = midnightResetService;
-  console.log('🔧 Debug: window.midnightReset available');
-  console.log('  - window.midnightReset.checkNow() - Force midnight check');
-  console.log('  - window.midnightReset.getCurrentDate() - Get current date');
+  if (import.meta.env.DEV) {
+    console.log('🔧 Debug: window.midnightReset available');
+    console.log('  - window.midnightReset.checkNow() - Force midnight check');
+    console.log('  - window.midnightReset.getCurrentDate() - Get current date');
+  }
 }

@@ -192,7 +192,6 @@ function Dashboard() {
 function App() {
   // Start midnight reset service
   useEffect(() => {
-    console.log('🌙 Starting midnight reset service for Dashboard');
     midnightResetService.start();
 
     return () => {

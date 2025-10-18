@@ -64,15 +64,16 @@ function generateTicketHTML(
   });
 
   // Use provided QR code or generate a simple placeholder
+  const queueNumberPadded = String(queueNumber).padStart(3, '0');
   const qrCode =
     qrCodeDataUrl ||
-    `data:image/svg+xml;base64,${btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+    `data:image/svg+xml;base64,${btoa(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
       <rect width="200" height="200" fill="white"/>
       <rect x="40" y="40" width="120" height="120" fill="black"/>
-      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-family="Arial">Q${String(queueNumber).padStart(3, '0')}</text>
-    </svg>
-  `)}`;
+      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-family="Arial">Q${queueNumberPadded}</text>
+    </svg>`
+    )}`;
 
   return `
 <!DOCTYPE html>
@@ -190,7 +191,7 @@ function generateTicketHTML(
 
     <div class="queue-section">
       <div class="queue-label">Your Queue Number</div>
-      <div class="queue-number">Q${String(queueNumber).padStart(3, '0')}</div>
+      <div class="queue-number">Q${queueNumberPadded}</div>
     </div>
 
     <div class="qr-section">

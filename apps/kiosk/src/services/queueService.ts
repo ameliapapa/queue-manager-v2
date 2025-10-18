@@ -1,7 +1,8 @@
 import QRCode from 'qrcode';
 import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { db } from '@shared/firebase/config';
-import { websocketClient } from './websocket';
+// ❌ WebSocket removed - Dashboard now uses Firestore real-time listeners
+// import { websocketClient } from './websocket';
 
 /**
  * Queue Service - Firebase Firestore Implementation
@@ -117,12 +118,9 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
       status: 'pending',
     });
 
-    // Emit WebSocket event for real-time updates (non-blocking)
-    websocketClient.emitQueueIssued({
-      queueNumber,
-      issuedAt: new Date(),
-      patientId,
-    });
+    // ✅ OPTIMIZED: WebSocket removed - Dashboard uses Firestore real-time listeners
+    // Real-time updates happen automatically via onSnapshot in Dashboard
+    // No need for explicit WebSocket events anymore
 
     return {
       success: true,

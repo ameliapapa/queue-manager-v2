@@ -1,0 +1,13 @@
+{
+  "name": "websocket-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.6.1",
+    "cors": "^2.8.5"
+  }
+}

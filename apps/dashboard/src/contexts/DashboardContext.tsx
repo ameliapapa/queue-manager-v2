@@ -9,6 +9,7 @@ import {
   PatientFormData,
 } from '../types';
 import * as api from '../services/mockApi';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 interface DashboardContextType extends DashboardState {
   allPatients: Patient[]; // All patients including completed (for statistics)
@@ -39,6 +40,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // WebSocket connection
+  const { ws, isConnected: wsConnected } = useWebSocket();
+
   // Load initial data
   useEffect(() => {
     refreshData();
@@ -52,6 +56,60 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
     return () => clearInterval(interval);
   }, []);
+
+  // WebSocket event listeners
+  useEffect(() => {
+    if (!ws) return;
+
+    // Listen for queue issued from kiosk
+    const unsubQueue = ws.on('queue:issued', () => {
+      console.log('📢 WebSocket: Queue issued');
+      refreshData();
+    });
+
+    // Listen for patient registration
+    const unsubRegistered = ws.on('patient:registered', (data) => {
+      console.log('📢 WebSocket: Patient registered', data);
+      refreshData();
+      addNotification('success', `${data.name} registered (Q${String(data.queueNumber).padStart(3, '0')})`);
+    });
+
+    // Listen for other dashboard events to sync across multiple dashboards
+    const unsubAssigned = ws.on('patient:assigned', () => {
+      console.log('📢 WebSocket: Patient assigned');
+      refreshData();
+    });
+
+    const unsubCompleted = ws.on('consultation:completed', () => {
+      console.log('📢 WebSocket: Consultation completed');
+      refreshData();
+    });
+
+    const unsubRoomStatus = ws.on('room:status_changed', () => {
+      console.log('📢 WebSocket: Room status changed');
+      refreshData();
+    });
+
+    const unsubCancelled = ws.on('patient:cancelled', () => {
+      console.log('📢 WebSocket: Patient cancelled');
+      refreshData();
+    });
+
+    const unsubUpdated = ws.on('patient:updated', () => {
+      console.log('📢 WebSocket: Patient updated');
+      refreshData();
+    });
+
+    return () => {
+      unsubQueue();
+      unsubRegistered();
+      unsubAssigned();
+      unsubCompleted();
+      unsubRoomStatus();
+      unsubCancelled();
+      unsubUpdated();
+    };
+  }, [ws]);
 
   const refreshData = async () => {
     try {

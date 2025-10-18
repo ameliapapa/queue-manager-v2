@@ -6,6 +6,7 @@ import { SuccessScreen } from './components/SuccessScreen';
 import { ErrorScreen } from './components/ErrorScreen';
 import { generateQueueNumber, getQueueStats } from './services/queueService';
 import { printTicket } from './services/printService';
+import { websocketClient } from './services/websocket';
 import { UPDATE_INTERVALS } from './constants';
 
 // App states
@@ -29,6 +30,15 @@ function App() {
   const [queueData, setQueueData] = useState<QueueData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+
+  // Connect to WebSocket on mount
+  useEffect(() => {
+    websocketClient.connect('http://localhost:3005');
+
+    return () => {
+      websocketClient.disconnect();
+    };
+  }, []);
 
   // Fetch queue stats periodically when idle
   useEffect(() => {

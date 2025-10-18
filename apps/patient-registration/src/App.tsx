@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import QueueNumber from './components/QueueNumber';
 import RegistrationForm from './components/RegistrationForm';
 import SuccessScreen from './components/SuccessScreen';
+import { websocketClient } from './services/websocket';
 import './styles/index.css';
 
 type AppState = 'loading' | 'form' | 'submitting' | 'success' | 'error';
@@ -19,6 +20,15 @@ function App() {
   const [queueNumber, setQueueNumber] = useState<number | null>(null);
   const [patientId, setPatientId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Connect to WebSocket on mount
+  useEffect(() => {
+    websocketClient.connect('http://localhost:3005');
+
+    return () => {
+      websocketClient.disconnect();
+    };
+  }, []);
 
   // Parse URL parameters on mount
   useEffect(() => {

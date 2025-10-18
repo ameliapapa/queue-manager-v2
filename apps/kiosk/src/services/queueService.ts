@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { websocketClient } from './websocket';
 
 /**
  * Queue Service - Pure Mock Mode
@@ -73,6 +74,13 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
 
   // Store patient in mock database
   savePatientToMockDB(queueCounter, patientId, registrationUrl);
+
+  // Emit WebSocket event for real-time updates
+  websocketClient.emitQueueIssued({
+    queueNumber: queueCounter,
+    issuedAt: new Date(),
+    patientId,
+  });
 
   return {
     success: true,

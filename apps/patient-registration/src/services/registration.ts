@@ -5,6 +5,7 @@
 
 import { doc, setDoc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@shared/firebase/config';
+import { websocketClient } from './websocket';
 
 export interface RegistrationData {
   queueNumber: number;
@@ -72,6 +73,18 @@ export async function submitRegistration(data: RegistrationData): Promise<void> 
     }
 
     console.log('✅ Registration submitted successfully');
+
+    // Emit WebSocket event for real-time updates
+    websocketClient.emitPatientRegistered({
+      queueNumber: data.queueNumber,
+      patientId: data.patientId || `queue-${data.queueNumber}`,
+      name: data.name,
+      phone: data.phone,
+      age: parseInt(data.age, 10),
+      gender: data.gender,
+      notes: data.notes,
+      registeredAt: new Date(),
+    });
   } catch (error) {
     console.error('❌ Registration submission failed:', error);
     throw new Error('Failed to submit registration. Please try again.');

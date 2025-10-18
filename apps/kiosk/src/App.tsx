@@ -6,7 +6,8 @@ import { SuccessScreen } from './components/SuccessScreen';
 import { ErrorScreen } from './components/ErrorScreen';
 import { generateQueueNumber, getQueueStats } from './services/queueService';
 import { printTicket } from './services/printService';
-import { websocketClient } from './services/websocket';
+// ❌ WebSocket removed - Dashboard uses Firestore real-time listeners
+// import { websocketClient } from './services/websocket';
 import { UPDATE_INTERVALS } from './constants';
 
 // App states
@@ -31,14 +32,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
 
-  // Connect to WebSocket on mount
-  useEffect(() => {
-    websocketClient.connect('http://localhost:3005');
-
-    return () => {
-      websocketClient.disconnect();
-    };
-  }, []);
+  // ❌ WebSocket connection removed - not needed anymore
+  // Dashboard uses Firestore onSnapshot for real-time updates
 
   // Fetch queue stats periodically when idle
   useEffect(() => {
@@ -77,7 +72,7 @@ function App() {
     setError(null);
 
     try {
-      // Step 1: Generate queue number (PURE MOCK MODE)
+      // Step 1: Generate queue number from Firestore
       const result = await generateQueueNumber();
 
       setQueueData({

@@ -1,10 +1,11 @@
 /**
- * Print Service - Pure Mock Mode
- * Generates printable tickets using mock data (no Firebase)
+ * Print Service
+ * Generates printable tickets using browser Print API
+ * Works with thermal printers or standard printers
  */
 
 /**
- * Generate and print a ticket (PURE MOCK MODE)
+ * Generate and print a ticket
  * @param queueNumber The queue number to print
  * @param registrationUrl The URL for patient registration
  * @param patientId The patient document ID
@@ -17,7 +18,7 @@ export async function printTicket(
   patientId: string,
   qrCodeDataUrl?: string
 ): Promise<void> {
-  console.log('🖨️  Printing ticket in PURE MOCK MODE');
+  console.log('🖨️  Printing ticket');
   console.log('  Queue Number:', queueNumber);
   console.log('  Registration URL:', registrationUrl);
 

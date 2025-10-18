@@ -1,24 +1,12 @@
 import QRCode from 'qrcode';
+import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { db } from '@shared/firebase/config';
 import { websocketClient } from './websocket';
 
 /**
- * Queue Service - Pure Mock Mode
- * Uses localStorage for persistent mock data without Firebase
+ * Queue Service - Firebase Firestore Implementation
+ * Uses Firestore for persistent data across all devices
  */
-
-// Mock counter stored in memory
-let queueCounter = 0;
-
-// Storage keys
-const STORAGE_KEY = 'hospital-queue-counter';
-const PATIENTS_KEY = 'hospital-queue-patients';
-
-// Initialize counter from localStorage on load
-const savedCounter = localStorage.getItem(STORAGE_KEY);
-if (savedCounter) {
-  queueCounter = parseInt(savedCounter, 10);
-  console.log('📊 Loaded queue counter from localStorage:', queueCounter);
-}
 
 interface GenerateQueueNumberResult {
   success: boolean;
@@ -29,111 +17,125 @@ interface GenerateQueueNumberResult {
 }
 
 /**
- * Generate a new queue number (PURE MOCK MODE)
+ * Get today's date string in YYYY-MM-DD format
+ */
+function getTodayDateString(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
+/**
+ * Generate a new queue number using Firebase Firestore
  * @returns Promise with queue number data
  */
 export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> {
-  console.log('🎯 Generating queue number in PURE MOCK MODE');
+  console.log('🎯 Generating queue number with Firebase Firestore');
 
-  // Simulate network delay (realistic UX)
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Increment counter
-  queueCounter++;
-
-  // Save to localStorage for persistence
-  localStorage.setItem(STORAGE_KEY, queueCounter.toString());
-
-  // Generate patient ID
-  const patientId = `mock-patient-${queueCounter}-${Date.now()}`;
-
-  // Generate registration URL (points to patient registration app)
-  const registrationUrl = `${window.location.protocol}//${window.location.hostname}:3002/register?queue=${queueCounter}`;
-
-  console.log('✅ Queue number generated:', queueCounter);
-  console.log('📱 Registration URL:', registrationUrl);
-
-  // Generate QR code
-  let qrCodeDataUrl: string;
   try {
-    qrCodeDataUrl = await QRCode.toDataURL(registrationUrl, {
-      width: 300,
-      margin: 2,
-      errorCorrectionLevel: 'H',
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF',
-      },
+    const dateString = getTodayDateString();
+    const counterRef = doc(db, 'queueCounter', dateString);
+
+    // Get current counter or initialize
+    const counterDoc = await getDoc(counterRef);
+    let queueNumber: number;
+
+    if (counterDoc.exists()) {
+      // Increment existing counter
+      await updateDoc(counterRef, {
+        counter: increment(1),
+        lastUpdated: serverTimestamp(),
+      });
+
+      // Get updated value
+      const updatedDoc = await getDoc(counterRef);
+      queueNumber = updatedDoc.data()?.counter || 1;
+    } else {
+      // Initialize new counter for today
+      queueNumber = 1;
+      await setDoc(counterRef, {
+        date: dateString,
+        counter: queueNumber,
+        createdAt: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
+      });
+    }
+
+    console.log('✅ Queue number generated:', queueNumber);
+
+    // Generate patient ID
+    const patientId = `patient-${dateString}-${queueNumber}-${Date.now()}`;
+
+    // Generate registration URL
+    const registrationUrl = `${window.location.protocol}//${window.location.hostname}:3002/register?queue=${queueNumber}&patient=${patientId}`;
+
+    console.log('📱 Registration URL:', registrationUrl);
+
+    // Generate QR code
+    let qrCodeDataUrl: string;
+    try {
+      qrCodeDataUrl = await QRCode.toDataURL(registrationUrl, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+      console.log('✅ QR code generated');
+    } catch (error) {
+      console.error('❌ Error generating QR code:', error);
+      // Fallback to simple data URL
+      qrCodeDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    }
+
+    // Create patient document in Firestore
+    const patientRef = doc(db, 'patients', patientId);
+    await setDoc(patientRef, {
+      queueNumber,
+      status: 'pending',
+      name: null,
+      phone: null,
+      age: null,
+      gender: null,
+      notes: null,
+      roomNumber: null,
+      createdAt: serverTimestamp(),
+      registeredAt: null,
+      calledAt: null,
+      completedAt: null,
+      qrCodeUrl: registrationUrl,
+      issuedAt: serverTimestamp(),
     });
-    console.log('✅ QR code generated');
+
+    console.log('💾 Patient saved to Firestore:', {
+      patientId,
+      queueNumber,
+      status: 'pending',
+    });
+
+    // Emit WebSocket event for real-time updates
+    websocketClient.emitQueueIssued({
+      queueNumber,
+      issuedAt: new Date(),
+      patientId,
+    });
+
+    return {
+      success: true,
+      queueNumber,
+      patientId,
+      registrationUrl,
+      qrCodeDataUrl,
+    };
   } catch (error) {
-    console.error('❌ Error generating QR code:', error);
-    // Fallback to simple data URL
-    qrCodeDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    console.error('❌ Error generating queue number:', error);
+    throw new Error('Failed to generate queue number. Please try again.');
   }
-
-  // Store patient in mock database
-  savePatientToMockDB(queueCounter, patientId, registrationUrl);
-
-  // Emit WebSocket event for real-time updates
-  websocketClient.emitQueueIssued({
-    queueNumber: queueCounter,
-    issuedAt: new Date(),
-    patientId,
-  });
-
-  return {
-    success: true,
-    queueNumber: queueCounter,
-    patientId,
-    registrationUrl,
-    qrCodeDataUrl,
-  };
 }
 
 /**
- * Save patient to mock localStorage database
- */
-function savePatientToMockDB(
-  queueNumber: number,
-  patientId: string,
-  registrationUrl: string
-) {
-  // Get existing patients
-  const patientsJSON = localStorage.getItem(PATIENTS_KEY);
-  const patients = patientsJSON ? JSON.parse(patientsJSON) : {};
-
-  // Add new patient
-  patients[queueNumber] = {
-    id: patientId,
-    queueNumber,
-    status: 'unregistered',
-    name: null,
-    phone: null,
-    age: null,
-    gender: null,
-    notes: null,
-    createdAt: new Date().toISOString(),
-    registeredAt: null,
-    assignedAt: null,
-    completedAt: null,
-    assignedRoomId: null,
-    qrCodeUrl: registrationUrl,
-    printedAt: new Date().toISOString(),
-  };
-
-  // Save back to localStorage
-  localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients));
-
-  console.log('💾 Patient saved to mock database:', {
-    queueNumber,
-    patientId,
-    status: 'unregistered',
-  });
-}
-
-/**
- * Get current queue stats from mock localStorage database
+ * Get current queue stats from Firestore
  * @returns Promise with queue statistics
  */
 export async function getQueueStats(): Promise<{
@@ -142,24 +144,34 @@ export async function getQueueStats(): Promise<{
   registered: number;
 }> {
   try {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    console.log('📊 Fetching queue stats from Firestore');
 
-    // Get patients from localStorage
-    const patientsJSON = localStorage.getItem(PATIENTS_KEY);
-    const patients = patientsJSON ? JSON.parse(patientsJSON) : {};
+    const dateString = getTodayDateString();
 
-    let totalToday = 0;
+    // Get today's counter
+    const counterRef = doc(db, 'queueCounter', dateString);
+    const counterDoc = await getDoc(counterRef);
+    const totalToday = counterDoc.exists() ? counterDoc.data()?.counter || 0 : 0;
+
+    // Get all patients for today
+    const patientsRef = collection(db, 'patients');
+    const q = query(patientsRef);
+    const querySnapshot = await getDocs(q);
+
     let pending = 0;
     let registered = 0;
 
-    // Count patients by status
-    Object.values(patients).forEach((patient: any) => {
-      totalToday++;
-      if (patient.status === 'unregistered') {
-        pending++;
-      } else if (patient.status === 'registered') {
-        registered++;
+    querySnapshot.forEach((doc) => {
+      const patient = doc.data();
+      const createdAt = patient.createdAt?.toDate();
+
+      // Only count today's patients
+      if (createdAt && createdAt.toISOString().split('T')[0] === dateString) {
+        if (patient.status === 'pending') {
+          pending++;
+        } else if (patient.status === 'registered') {
+          registered++;
+        }
       }
     });
 
@@ -182,39 +194,104 @@ export async function getQueueStats(): Promise<{
 
 /**
  * Reset queue counter (useful for testing)
+ * WARNING: This will delete all queue data for today!
  */
-export function resetQueueCounter() {
-  queueCounter = 0;
-  localStorage.setItem(STORAGE_KEY, '0');
-  localStorage.removeItem(PATIENTS_KEY);
-  console.log('🔄 Queue counter reset to 0');
-  console.log('🗑️  All mock patients cleared');
+export async function resetQueueCounter() {
+  try {
+    const dateString = getTodayDateString();
+
+    console.log('🔄 Resetting queue counter for:', dateString);
+
+    // Reset counter
+    const counterRef = doc(db, 'queueCounter', dateString);
+    await setDoc(counterRef, {
+      date: dateString,
+      counter: 0,
+      createdAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
+    });
+
+    // Delete all patients for today
+    const patientsRef = collection(db, 'patients');
+    const q = query(patientsRef);
+    const querySnapshot = await getDocs(q);
+
+    const deletePromises: Promise<void>[] = [];
+    querySnapshot.forEach((docSnapshot) => {
+      const patient = docSnapshot.data();
+      const createdAt = patient.createdAt?.toDate();
+
+      if (createdAt && createdAt.toISOString().split('T')[0] === dateString) {
+        deletePromises.push(
+          updateDoc(doc(db, 'patients', docSnapshot.id), {
+            status: 'cancelled',
+            cancelledAt: serverTimestamp(),
+          })
+        );
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    console.log('✅ Queue counter reset to 0');
+    console.log('✅ All patients for today marked as cancelled');
+  } catch (error) {
+    console.error('❌ Error resetting queue counter:', error);
+    throw new Error('Failed to reset queue counter');
+  }
 }
 
 /**
- * Get all patients from mock database
+ * Get all patients from Firestore (for debugging)
  */
-export function getAllPatients() {
-  const patientsJSON = localStorage.getItem(PATIENTS_KEY);
-  return patientsJSON ? JSON.parse(patientsJSON) : {};
+export async function getAllPatients() {
+  try {
+    const patientsRef = collection(db, 'patients');
+    const querySnapshot = await getDocs(patientsRef);
+
+    const patients: any[] = [];
+    querySnapshot.forEach((doc) => {
+      patients.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return patients;
+  } catch (error) {
+    console.error('❌ Error getting all patients:', error);
+    return [];
+  }
 }
 
 /**
- * Debug: Log all mock data
+ * Debug: Log all Firestore data
  */
-export function debugMockData() {
-  console.log('=== MOCK DATABASE DEBUG ===');
-  console.log('Current Queue Counter:', queueCounter);
-  console.log('localStorage Counter:', localStorage.getItem(STORAGE_KEY));
-  console.log('All Patients:', getAllPatients());
-  console.log('========================');
+export async function debugFirestoreData() {
+  console.log('=== FIRESTORE DATABASE DEBUG ===');
+
+  try {
+    const dateString = getTodayDateString();
+    const counterRef = doc(db, 'queueCounter', dateString);
+    const counterDoc = await getDoc(counterRef);
+
+    console.log('Current Queue Counter:', counterDoc.exists() ? counterDoc.data() : 'Not initialized');
+
+    const patients = await getAllPatients();
+    console.log('All Patients:', patients);
+    console.log(`Total Patients in DB: ${patients.length}`);
+  } catch (error) {
+    console.error('Error debugging Firestore:', error);
+  }
+
+  console.log('================================');
 }
 
-// Expose reset function globally for easy testing
+// Expose debug functions globally for easy testing
 if (typeof window !== 'undefined') {
   (window as any).resetQueue = resetQueueCounter;
-  (window as any).debugQueue = debugMockData;
+  (window as any).debugQueue = debugFirestoreData;
   console.log('🔧 Debug commands available:');
   console.log('  - window.resetQueue() - Reset queue to 0');
-  console.log('  - window.debugQueue() - Show mock database');
+  console.log('  - window.debugQueue() - Show Firestore database');
 }

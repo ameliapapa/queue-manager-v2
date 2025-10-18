@@ -71,7 +71,49 @@ function initializeSampleData() {
   }
 
   if (!localStorage.getItem(STORAGE_KEYS.PATIENTS)) {
+    const now = Date.now();
     const samplePatients: Patient[] = [
+      // Completed patients (for statistics)
+      {
+        id: 'patient-completed-1',
+        queueNumber: 101,
+        name: 'Alice Johnson',
+        phone: '555-0201',
+        age: 28,
+        gender: 'female',
+        notes: 'Routine checkup',
+        status: 'completed',
+        registeredAt: new Date(now - 120 * 60 * 1000), // 2h ago
+        assignedAt: new Date(now - 105 * 60 * 1000), // Waited 15 mins
+        completedAt: new Date(now - 85 * 60 * 1000), // Consultation: 20 mins
+      },
+      {
+        id: 'patient-completed-2',
+        queueNumber: 102,
+        name: 'Bob Williams',
+        phone: '555-0202',
+        age: 55,
+        gender: 'male',
+        notes: 'Follow-up visit',
+        status: 'completed',
+        registeredAt: new Date(now - 100 * 60 * 1000), // 100 mins ago
+        assignedAt: new Date(now - 90 * 60 * 1000), // Waited 10 mins
+        completedAt: new Date(now - 75 * 60 * 1000), // Consultation: 15 mins
+      },
+      {
+        id: 'patient-completed-3',
+        queueNumber: 103,
+        name: 'Carol Davis',
+        phone: '555-0203',
+        age: 42,
+        gender: 'female',
+        notes: 'Prescription refill',
+        status: 'completed',
+        registeredAt: new Date(now - 80 * 60 * 1000), // 80 mins ago
+        assignedAt: new Date(now - 60 * 60 * 1000), // Waited 20 mins
+        completedAt: new Date(now - 50 * 60 * 1000), // Consultation: 10 mins
+      },
+      // Current registered patients
       {
         id: 'patient-1',
         queueNumber: 1,
@@ -81,7 +123,7 @@ function initializeSampleData() {
         gender: 'male',
         notes: 'Diabetes checkup',
         status: 'registered',
-        registeredAt: new Date(Date.now() - 15 * 60 * 1000), // 15 mins ago
+        registeredAt: new Date(now - 15 * 60 * 1000), // 15 mins ago
       },
       {
         id: 'patient-2',
@@ -92,7 +134,7 @@ function initializeSampleData() {
         gender: 'female',
         notes: '',
         status: 'registered',
-        registeredAt: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+        registeredAt: new Date(now - 10 * 60 * 1000), // 10 mins ago
       },
       {
         id: 'patient-3',
@@ -103,7 +145,7 @@ function initializeSampleData() {
         gender: 'male',
         notes: 'Blood pressure monitoring',
         status: 'registered',
-        registeredAt: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        registeredAt: new Date(now - 5 * 60 * 1000), // 5 mins ago
       },
     ];
     localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(samplePatients));
@@ -161,6 +203,18 @@ export async function getRooms(): Promise<ApiResponse<Room[]>> {
 
   const rooms = parseDates<Room[]>(JSON.parse(data));
   return { success: true, data: rooms };
+}
+
+/**
+ * Get all patients (including completed)
+ */
+export async function getAllPatients(): Promise<ApiResponse<Patient[]>> {
+  await delay();
+  const data = localStorage.getItem(STORAGE_KEYS.PATIENTS);
+  if (!data) return { success: true, data: [] };
+
+  const patients = parseDates<Patient[]>(JSON.parse(data));
+  return { success: true, data: patients };
 }
 
 /**

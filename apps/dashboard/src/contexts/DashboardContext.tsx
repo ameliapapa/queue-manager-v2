@@ -11,6 +11,7 @@ import {
 import * as api from '../services/mockApi';
 
 interface DashboardContextType extends DashboardState {
+  allPatients: Patient[]; // All patients including completed (for statistics)
   notifications: Notification[];
   assignPatient: (patientId: string, roomId: string) => Promise<void>;
   completeConsultation: (roomId: string) => Promise<void>;
@@ -35,6 +36,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     lastSync: null,
   });
 
+  const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Load initial data
@@ -53,9 +55,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const refreshData = async () => {
     try {
-      const [roomsRes, patientsRes, unregRes] = await Promise.all([
+      const [roomsRes, patientsRes, allPatientsRes, unregRes] = await Promise.all([
         api.getRooms(),
         api.getRegisteredPatients(),
+        api.getAllPatients(),
         api.getUnregisteredQueue(),
       ]);
 
@@ -67,6 +70,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         isConnected: true,
         lastSync: new Date(),
       }));
+
+      setAllPatients(allPatientsRes.data || []);
     } catch (error) {
       console.error('Failed to refresh data:', error);
       setState(prev => ({ ...prev, isConnected: false }));
@@ -165,6 +170,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     <DashboardContext.Provider
       value={{
         ...state,
+        allPatients,
         notifications,
         assignPatient,
         completeConsultation,

@@ -3,6 +3,7 @@ import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
 import RoomCard from './components/RoomCard';
 import RegisteredQueueList from './components/RegisteredQueueList';
 import UnregisteredQueueList from './components/UnregisteredQueueList';
+import DailyStatsOverview from './components/DailyStatsOverview';
 import PatientModal from './components/PatientModal';
 import RegistrationModal from './components/RegistrationModal';
 import { Patient } from './types';
@@ -14,6 +15,8 @@ function Dashboard() {
     rooms,
     registeredPatients,
     unregisteredQueue,
+    allPatients,
+    assignments,
     notifications,
     isConnected,
     lastSync,
@@ -104,15 +107,21 @@ function Dashboard() {
         </section>
 
         {/* Queue Section */}
-        <section className="grid grid-cols-2 gap-6" style={{ height: 'calc(100vh - 400px)', minHeight: '500px' }}>
+        <section className="grid grid-cols-3 gap-6" style={{ height: 'calc(100vh - 400px)', minHeight: '500px' }}>
           <RegisteredQueueList
             patients={registeredPatients}
             onPatientClick={setSelectedPatient}
           />
-          <UnregisteredQueueList
-            queue={unregisteredQueue}
-            onRegister={setRegistrationQueueNumber}
-          />
+          <div className="space-y-6">
+            <DailyStatsOverview
+              patients={allPatients}
+              assignments={assignments}
+            />
+            <UnregisteredQueueList
+              queue={unregisteredQueue}
+              onRegister={setRegistrationQueueNumber}
+            />
+          </div>
         </section>
       </main>
 

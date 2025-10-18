@@ -9,6 +9,9 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../shared'),
     },
   },
+  optimizeDeps: {
+    include: ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/functions'],
+  },
   server: {
     port: 3004,
     open: true,

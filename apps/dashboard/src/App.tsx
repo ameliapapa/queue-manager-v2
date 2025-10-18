@@ -1,15 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
 import RoomCard from './components/RoomCard';
 import RegisteredQueueList from './components/RegisteredQueueList';
 import UnregisteredQueueList from './components/UnregisteredQueueList';
 import DailyStatsOverview from './components/DailyStatsOverview';
-import PatientModal from './components/PatientModal';
-import RegistrationModal from './components/RegistrationModal';
 import { Patient } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { midnightResetService } from '@shared/services/midnightResetService';
 import './styles/index.css';
+
+// ✅ Code Splitting: Lazy load modals (only loaded when needed)
+const PatientModal = lazy(() => import('./components/PatientModal'));
+const RegistrationModal = lazy(() => import('./components/RegistrationModal'));
+
+// Loading fallback for lazy-loaded modals
+function ModalLoadingFallback() {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <p className="text-lg font-medium text-gray-700">Loading...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Dashboard() {
   const {
@@ -151,19 +167,23 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* Modals */}
+      {/* Modals with Suspense boundaries for code splitting */}
       {selectedPatient && (
-        <PatientModal
-          patient={selectedPatient}
-          onClose={() => setSelectedPatient(null)}
-        />
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <PatientModal
+            patient={selectedPatient}
+            onClose={() => setSelectedPatient(null)}
+          />
+        </Suspense>
       )}
 
       {registrationQueueNumber !== null && (
-        <RegistrationModal
-          queueNumber={registrationQueueNumber}
-          onClose={() => setRegistrationQueueNumber(null)}
-        />
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <RegistrationModal
+            queueNumber={registrationQueueNumber}
+            onClose={() => setRegistrationQueueNumber(null)}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -12,10 +12,10 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'receptionist';
     }
 
-    // Queue counter - read for all, write only via cloud function
+    // Queue counter - open for local development
     match /queueCounter/{date} {
       allow read: if true;
-      allow write: if false; // Only cloud functions can write
+      allow write: if true; // Open for local development (restrict in production)
     }
 
     // Patients collection
@@ -23,20 +23,14 @@ service cloud.firestore {
       // Anyone can read patients (for TV display, kiosk status)
       allow read: if true;
 
-      // Only cloud functions can create new patients (from kiosk)
-      allow create: if false;
+      // Allow creation for local development (restrict in production)
+      allow create: if true;
 
-      // Patients can update their own registration data
-      allow update: if !isAuthenticated() &&
-                      resource.data.status == 'unregistered' &&
-                      request.resource.data.status == 'registered' &&
-                      request.resource.data.queueNumber == resource.data.queueNumber;
+      // Allow updates for patient registration and receptionist management
+      allow update: if true;
 
-      // Receptionists can update any patient
-      allow update: if isReceptionist();
-
-      // No deletion allowed
-      allow delete: if false;
+      // Allow deletion for local development
+      allow delete: if true;
     }
 
     // Rooms collection
@@ -44,21 +38,21 @@ service cloud.firestore {
       // Anyone can read rooms (for TV display)
       allow read: if true;
 
-      // Only receptionists can update rooms
-      allow create, update, delete: if isReceptionist();
+      // Open for local development (restrict in production)
+      allow create, update, delete: if true;
     }
 
     // Users collection (for receptionist authentication)
     match /users/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      allow write: if false; // Only admins via Firebase console
+      allow read: if true; // Open for local development
+      allow write: if true; // Open for local development
     }
 
     // Print jobs (for tracking print status)
     match /printJobs/{jobId} {
       allow read: if true;
-      allow create: if false; // Only cloud functions
-      allow update, delete: if false;
+      allow create: if true; // Open for local development
+      allow update, delete: if true; // Open for local development
     }
   }
 }

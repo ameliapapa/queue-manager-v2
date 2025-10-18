@@ -8,6 +8,7 @@ import PatientModal from './components/PatientModal';
 import RegistrationModal from './components/RegistrationModal';
 import { Patient } from './types';
 import { formatDistanceToNow } from 'date-fns';
+import { midnightResetService } from '@shared/services/midnightResetService';
 import './styles/index.css';
 
 function Dashboard() {
@@ -169,6 +170,16 @@ function Dashboard() {
 }
 
 function App() {
+  // Start midnight reset service
+  useEffect(() => {
+    console.log('🌙 Starting midnight reset service for Dashboard');
+    midnightResetService.start();
+
+    return () => {
+      midnightResetService.stop();
+    };
+  }, []);
+
   return (
     <DashboardProvider>
       <Dashboard />

@@ -6,6 +6,7 @@ import { SuccessScreen } from './components/SuccessScreen';
 import { ErrorScreen } from './components/ErrorScreen';
 import { generateQueueNumber, getQueueStats } from './services/queueService';
 import { printTicket } from './services/printService';
+import { midnightResetService } from '@shared/services/midnightResetService';
 // ❌ WebSocket removed - Dashboard uses Firestore real-time listeners
 // import { websocketClient } from './services/websocket';
 import { UPDATE_INTERVALS } from './constants';
@@ -34,6 +35,16 @@ function App() {
 
   // ❌ WebSocket connection removed - not needed anymore
   // Dashboard uses Firestore onSnapshot for real-time updates
+
+  // Start midnight reset service
+  useEffect(() => {
+    console.log('🌙 Starting midnight reset service for Kiosk');
+    midnightResetService.start();
+
+    return () => {
+      midnightResetService.stop();
+    };
+  }, []);
 
   // Fetch queue stats periodically when idle
   useEffect(() => {

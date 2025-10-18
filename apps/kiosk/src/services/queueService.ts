@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { db } from '@shared/firebase/config';
 import { websocketClient } from './websocket';
 
@@ -35,30 +35,34 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
     const dateString = getTodayDateString();
     const counterRef = doc(db, 'queueCounter', dateString);
 
-    // Get current counter or initialize
-    const counterDoc = await getDoc(counterRef);
-    let queueNumber: number;
+    // ✅ OPTIMIZED: Use transaction for atomic increment and read
+    const queueNumber = await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
 
-    if (counterDoc.exists()) {
-      // Increment existing counter
-      await updateDoc(counterRef, {
-        counter: increment(1),
-        lastUpdated: serverTimestamp(),
-      });
+      if (counterDoc.exists()) {
+        // Increment existing counter
+        const currentCount = counterDoc.data()?.counter || 0;
+        const newCount = currentCount + 1;
 
-      // Get updated value
-      const updatedDoc = await getDoc(counterRef);
-      queueNumber = updatedDoc.data()?.counter || 1;
-    } else {
-      // Initialize new counter for today
-      queueNumber = 1;
-      await setDoc(counterRef, {
-        date: dateString,
-        counter: queueNumber,
-        createdAt: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
-      });
-    }
+        transaction.update(counterRef, {
+          counter: newCount,
+          lastUpdated: serverTimestamp(),
+        });
+
+        return newCount;
+      } else {
+        // Initialize new counter for today
+        const newCount = 1;
+        transaction.set(counterRef, {
+          date: dateString,
+          counter: newCount,
+          createdAt: serverTimestamp(),
+          lastUpdated: serverTimestamp(),
+        });
+
+        return newCount;
+      }
+    });
 
     console.log('✅ Queue number generated:', queueNumber);
 

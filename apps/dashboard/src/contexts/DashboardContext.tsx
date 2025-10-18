@@ -61,6 +61,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const dateString = getTodayDateString();
 
     // Listener 1: Registered patients
+    // ✅ OPTIMIZED: Use snapshot changes for incremental updates
     const registeredQ = query(
       collection(db, 'patients'),
       where('status', '==', 'registered'),
@@ -71,39 +72,56 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const unsubRegistered = onSnapshot(
       registeredQ,
       (snapshot) => {
-        const patients = snapshot.docs.map(doc => {
-          const data = doc.data();
-          const createdAt = data.createdAt?.toDate();
+        // ✅ OPTIMIZED: Only process changed documents
+        setState(prev => {
+          const patientsMap = new Map(prev.registeredPatients.map(p => [p.id, p]));
 
-          // Only include today's patients
-          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
-            return null;
-          }
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+            const createdAt = data.createdAt?.toDate();
+
+            // Only include today's patients
+            if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+              if (change.type === 'removed' || change.type === 'modified') {
+                patientsMap.delete(doc.id);
+              }
+              return;
+            }
+
+            const patient: Patient = {
+              id: doc.id,
+              queueNumber: data.queueNumber,
+              name: data.name,
+              phone: data.phone,
+              age: data.age,
+              gender: data.gender,
+              notes: data.notes,
+              status: data.status,
+              registeredAt: data.registeredAt?.toDate(),
+              assignedAt: data.assignedAt?.toDate(),
+              completedAt: data.completedAt?.toDate(),
+              roomId: data.roomId,
+              editHistory: data.editHistory,
+            };
+
+            if (change.type === 'removed') {
+              patientsMap.delete(doc.id);
+            } else {
+              patientsMap.set(doc.id, patient);
+            }
+          });
+
+          const patients = Array.from(patientsMap.values());
+          console.log('✅ Registered patients updated (incremental):', patients.length);
 
           return {
-            id: doc.id,
-            queueNumber: data.queueNumber,
-            name: data.name,
-            phone: data.phone,
-            age: data.age,
-            gender: data.gender,
-            notes: data.notes,
-            status: data.status,
-            registeredAt: data.registeredAt?.toDate(),
-            assignedAt: data.assignedAt?.toDate(),
-            completedAt: data.completedAt?.toDate(),
-            roomId: data.roomId,
-            editHistory: data.editHistory,
-          } as Patient;
-        }).filter(p => p !== null) as Patient[];
-
-        setState(prev => ({
-          ...prev,
-          registeredPatients: patients,
-          lastSync: new Date(),
-          isConnected: true,
-        }));
-        console.log('✅ Registered patients updated:', patients.length);
+            ...prev,
+            registeredPatients: patients,
+            lastSync: new Date(),
+            isConnected: true,
+          };
+        });
       },
       (error) => {
         console.error('❌ Error listening to registered patients:', error);
@@ -113,6 +131,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     unsubscribers.push(unsubRegistered);
 
     // Listener 2: Unregistered patients (status: 'pending')
+    // ✅ OPTIMIZED: Use snapshot changes for incremental updates
     const unregisteredQ = query(
       collection(db, 'patients'),
       where('status', '==', 'pending'),
@@ -123,27 +142,44 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const unsubUnregistered = onSnapshot(
       unregisteredQ,
       (snapshot) => {
-        const queue = snapshot.docs.map(doc => {
-          const data = doc.data();
-          const createdAt = data.createdAt?.toDate();
+        // ✅ OPTIMIZED: Only process changed documents
+        setState(prev => {
+          const queueMap = new Map(prev.unregisteredQueue.map(q => [q.id, q]));
 
-          // Only include today's patients
-          if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
-            return null;
-          }
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+            const createdAt = data.createdAt?.toDate();
+
+            // Only include today's patients
+            if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+              if (change.type === 'removed' || change.type === 'modified') {
+                queueMap.delete(doc.id);
+              }
+              return;
+            }
+
+            const queueItem: UnregisteredQueue = {
+              id: doc.id,
+              queueNumber: data.queueNumber,
+              issuedAt: data.issuedAt?.toDate() || createdAt,
+            };
+
+            if (change.type === 'removed') {
+              queueMap.delete(doc.id);
+            } else {
+              queueMap.set(doc.id, queueItem);
+            }
+          });
+
+          const queue = Array.from(queueMap.values());
+          console.log('✅ Unregistered queue updated (incremental):', queue.length);
 
           return {
-            id: doc.id,
-            queueNumber: data.queueNumber,
-            issuedAt: data.issuedAt?.toDate() || createdAt,
-          } as UnregisteredQueue;
-        }).filter(q => q !== null) as UnregisteredQueue[];
-
-        setState(prev => ({
-          ...prev,
-          unregisteredQueue: queue,
-        }));
-        console.log('✅ Unregistered queue updated:', queue.length);
+            ...prev,
+            unregisteredQueue: queue,
+          };
+        });
       },
       (error) => {
         console.error('❌ Error listening to unregistered queue:', error);

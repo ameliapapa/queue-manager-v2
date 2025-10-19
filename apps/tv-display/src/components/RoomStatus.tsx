@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Room } from '../services/dataService';
+import { sq } from '../i18n/sq';
 
 interface RoomStatusProps {
   rooms: Room[];
@@ -9,9 +10,9 @@ interface RoomStatusProps {
 function RoomStatus({ rooms }: RoomStatusProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-blue-600 text-white px-6 py-4">
-        <h2 className="text-2xl font-bold">ROOM STATUS</h2>
-        <p className="text-blue-100 text-sm mt-1">Current Patients</p>
+      <div className="text-white px-6 py-4" style={{ backgroundColor: '#8B2E42' }}>
+        <h2 className="text-2xl font-bold">{sq.rooms.title}</h2>
+        <p className="text-primary-100 text-sm mt-1">{sq.rooms.nowServing}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-white">
@@ -19,41 +20,35 @@ function RoomStatus({ rooms }: RoomStatusProps) {
           {rooms.map((room) => (
             <div
               key={room.number}
-              className={`p-6 transition-colors ${
-                room.status === 'occupied'
-                  ? 'bg-green-50'
-                  : 'bg-gray-50'
-              }`}
+              className="p-6 transition-colors"
+              style={{
+                backgroundColor: room.status === 'occupied' ? '#fdf2f4' : '#f9fafb'
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div
-                    className={`flex items-center justify-center w-16 h-16 rounded-xl font-bold text-2xl ${
-                      room.status === 'occupied'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-300 text-gray-600'
-                    }`}
+                    className="flex items-center justify-center w-16 h-16 rounded-xl font-bold text-2xl"
+                    style={{
+                      backgroundColor: room.status === 'occupied' ? '#b01f40' : '#d1d5db',
+                      color: room.status === 'occupied' ? 'white' : '#4b5563'
+                    }}
                   >
                     {room.number}
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-500">
-                      Room {room.number}
+                      {sq.rooms.room} {room.number}
                     </div>
                     {room.currentPatient ? (
                       <div className="mt-1">
                         <div className="text-3xl font-bold text-gray-900">
-                          Q{String(room.currentPatient.queueNumber).padStart(3, '0')}
+                          {String(room.currentPatient.queueNumber).padStart(3, '0')}
                         </div>
-                        {room.currentPatient.name && (
-                          <div className="text-sm text-gray-600 mt-1">
-                            {room.currentPatient.name}
-                          </div>
-                        )}
                       </div>
                     ) : (
                       <div className="text-xl font-semibold text-gray-400 mt-1">
-                        Available
+                        {sq.rooms.available}
                       </div>
                     )}
                   </div>
@@ -62,9 +57,15 @@ function RoomStatus({ rooms }: RoomStatusProps) {
                 <div>
                   {room.status === 'occupied' && (
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-green-700">
-                        In Progress
+                      <div
+                        className="w-3 h-3 rounded-full animate-pulse"
+                        style={{ backgroundColor: '#d12b4f' }}
+                      ></div>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: '#b01f40' }}
+                      >
+                        {sq.status.inConsultation}
                       </span>
                     </div>
                   )}

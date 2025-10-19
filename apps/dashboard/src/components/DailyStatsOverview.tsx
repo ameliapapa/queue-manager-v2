@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Patient, Assignment } from '../types';
 import { formatDuration, intervalToDuration } from 'date-fns';
+import { sq } from '../i18n/sq';
 
 interface DailyStatsOverviewProps {
   patients: Patient[];
@@ -73,9 +74,9 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Today's Overview</h2>
+        <h2 className="text-xl font-bold text-gray-900">{sq.stats.totalPatients}</h2>
         <div className="text-xs text-gray-500">
-          {new Date().toLocaleDateString('en-US', {
+          {new Date().toLocaleDateString('sq-AL', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -89,13 +90,13 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
         <div className="bg-green-50 rounded-lg p-4 border border-green-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-gray-700">{sq.stats.completed}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.completedCount}</p>
               </div>
             </div>
@@ -105,14 +106,14 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
         {/* Average Wait Time */}
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600">Avg Wait Time</p>
-              <p className="text-sm text-gray-500">Registration → Room</p>
+              <p className="text-sm text-gray-700">{sq.stats.avgWaitTime}</p>
+              <p className="text-xs text-gray-600">{sq.stats.registered} → {sq.rooms.room}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-blue-600">{formatTime(stats.avgWaitTime)}</p>
@@ -123,14 +124,14 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
         {/* Average Consultation Time */}
         <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600">Avg Consultation</p>
-              <p className="text-sm text-gray-500">Assigned → Completed</p>
+              <p className="text-sm text-gray-700">Konsultimi Mesatar</p>
+              <p className="text-xs text-gray-600">{sq.rooms.assignNext} → {sq.stats.completed}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-purple-600">{formatTime(stats.avgConsultationTime)}</p>
@@ -142,11 +143,11 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
         <div className="border-t pt-4 mt-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
-              <p className="text-xs text-gray-600 mb-1">In Queue</p>
+              <p className="text-xs text-gray-700 mb-1">Në Radhë</p>
               <p className="text-xl font-bold text-orange-600">{stats.currentQueue}</p>
             </div>
             <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
-              <p className="text-xs text-gray-600 mb-1">In Room</p>
+              <p className="text-xs text-gray-700 mb-1">{sq.stats.inConsultation}</p>
               <p className="text-xl font-bold text-indigo-600">{stats.inConsultation}</p>
             </div>
           </div>
@@ -154,7 +155,7 @@ export default function DailyStatsOverview({ patients, assignments }: DailyStats
 
         {/* Total Served Today */}
         <div className="bg-gray-50 rounded-lg p-3 text-center">
-          <p className="text-xs text-gray-600 mb-1">Total Served Today</p>
+          <p className="text-xs text-gray-700 mb-1">Totali Sot</p>
           <p className="text-3xl font-bold text-gray-900">{stats.completedCount + stats.inConsultation}</p>
         </div>
       </div>

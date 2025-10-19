@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { UnregisteredQueue } from '../types';
 import { safeFormatDistanceToNow } from '../utils/dateUtils';
+import { sq } from '../i18n/sq';
 
 interface UnregisteredQueueListProps {
   queue: UnregisteredQueue[];
@@ -19,8 +20,8 @@ function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900">Unregistered Queue</h2>
-        <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
+        <h2 className="text-xl font-bold text-gray-900">{sq.queue.unregisteredTitle}</h2>
+        <span className="bg-primary-100 text-primary-900 px-3 py-1 rounded-full text-sm font-semibold">
           {queue.length}
         </span>
       </div>
@@ -32,7 +33,7 @@ function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps
             <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p>All patients registered</p>
+            <p>{sq.queue.noPatients}</p>
           </div>
         ) : (
           queue.map((item, index) => {
@@ -50,12 +51,12 @@ function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl font-bold text-orange-600 font-mono">
+                    <span className="text-2xl font-bold text-primary-800 font-mono">
                       {String(item.queueNumber).padStart(3, '0')}
                     </span>
                     {urgent && (
                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
-                        URGENT
+                        I NGUTSHËM
                       </span>
                     )}
                   </div>
@@ -66,9 +67,12 @@ function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps
 
                 <button
                   onClick={() => onRegister(item.queueNumber)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all"
+                  className="w-full text-white py-2.5 px-4 rounded-lg font-semibold transition-all shadow-sm"
+                  style={{ backgroundColor: '#8B2E42' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6b1e2e'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8B2E42'}
                 >
-                  Complete Registration
+                  {sq.actions.register}
                 </button>
               </div>
             );

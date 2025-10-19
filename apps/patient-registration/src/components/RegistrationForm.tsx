@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { sq } from '../i18n/sq';
 
 interface FormData {
   name: string;
@@ -25,14 +26,14 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
-        Patient Information
+        {sq.form.personalInfo}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Name Field */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Full Name <span className="text-red-500">*</span>
+            {sq.form.fullName} <span style={{ color: '#8B2E42' }}>*</span>
           </label>
           <input
             id="name"
@@ -40,31 +41,32 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
             disabled={isSubmitting}
             className={`w-full px-4 py-3 rounded-xl border ${
               errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base sm:text-lg ${
+            } focus:ring-2 focus:border-transparent transition-all text-base sm:text-lg ${
               isSubmitting ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
-            placeholder="Enter your full name"
+            style={!errors.name && !isSubmitting ? { outlineColor: '#8B2E42' } : {}}
+            placeholder={sq.form.fullName}
             {...register('name', {
-              required: 'Name is required',
+              required: sq.validation.required,
               minLength: {
                 value: 2,
-                message: 'Name must be at least 2 characters',
+                message: sq.validation.required,
               },
               pattern: {
-                value: /^[a-zA-Z\s'-]+$/,
-                message: 'Name can only contain letters, spaces, hyphens, and apostrophes',
+                value: /^[a-zA-ZëËçÇ\s'-]+$/,
+                message: sq.validation.required,
               },
             })}
           />
           {errors.name && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.name.message}</p>
+            <p className="mt-1.5 text-sm" style={{ color: '#8B2E42' }}>{errors.name.message}</p>
           )}
         </div>
 
         {/* Phone Field */}
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number <span className="text-red-500">*</span>
+            {sq.form.phoneNumber} <span style={{ color: '#8B2E42' }}>*</span>
           </label>
           <input
             id="phone"
@@ -72,24 +74,25 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
             disabled={isSubmitting}
             className={`w-full px-4 py-3 rounded-xl border ${
               errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base sm:text-lg ${
+            } focus:ring-2 focus:border-transparent transition-all text-base sm:text-lg ${
               isSubmitting ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
-            placeholder="Enter your phone number"
+            style={!errors.phone && !isSubmitting ? { outlineColor: '#8B2E42' } : {}}
+            placeholder={sq.form.phoneNumber}
             {...register('phone', {
-              required: 'Phone number is required',
+              required: sq.validation.required,
               pattern: {
                 value: /^[0-9+\-\s()]+$/,
-                message: 'Please enter a valid phone number',
+                message: sq.validation.invalidPhone,
               },
               minLength: {
                 value: 10,
-                message: 'Phone number must be at least 10 digits',
+                message: sq.validation.invalidPhone,
               },
             })}
           />
           {errors.phone && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.phone.message}</p>
+            <p className="mt-1.5 text-sm" style={{ color: '#8B2E42' }}>{errors.phone.message}</p>
           )}
         </div>
 
@@ -98,7 +101,7 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
           {/* Age Field */}
           <div>
             <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
-              Age <span className="text-red-500">*</span>
+              {sq.form.age} <span style={{ color: '#8B2E42' }}>*</span>
             </label>
             <input
               id="age"
@@ -106,51 +109,53 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
               disabled={isSubmitting}
               className={`w-full px-4 py-3 rounded-xl border ${
                 errors.age ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base sm:text-lg ${
+              } focus:ring-2 focus:border-transparent transition-all text-base sm:text-lg ${
                 isSubmitting ? 'bg-gray-100 cursor-not-allowed' : ''
               }`}
-              placeholder="Age"
+              style={!errors.age && !isSubmitting ? { outlineColor: '#8B2E42' } : {}}
+              placeholder={sq.form.age}
               {...register('age', {
-                required: 'Age is required',
+                required: sq.validation.required,
                 min: {
                   value: 1,
-                  message: 'Age must be at least 1',
+                  message: sq.validation.required,
                 },
                 max: {
                   value: 150,
-                  message: 'Please enter a valid age',
+                  message: sq.validation.required,
                 },
               })}
             />
             {errors.age && (
-              <p className="mt-1.5 text-sm text-red-600">{errors.age.message}</p>
+              <p className="mt-1.5 text-sm" style={{ color: '#8B2E42' }}>{errors.age.message}</p>
             )}
           </div>
 
           {/* Gender Field */}
           <div>
             <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
-              Gender <span className="text-red-500">*</span>
+              {sq.form.gender} <span style={{ color: '#8B2E42' }}>*</span>
             </label>
             <select
               id="gender"
               disabled={isSubmitting}
               className={`w-full px-4 py-3 rounded-xl border ${
                 errors.gender ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base sm:text-lg ${
+              } focus:ring-2 focus:border-transparent transition-all text-base sm:text-lg ${
                 isSubmitting ? 'bg-gray-100 cursor-not-allowed' : ''
               }`}
+              style={!errors.gender && !isSubmitting ? { outlineColor: '#8B2E42' } : {}}
               {...register('gender', {
-                required: 'Gender is required',
+                required: sq.validation.required,
               })}
             >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
+              <option value="">{sq.form.gender}</option>
+              <option value="male">{sq.form.male}</option>
+              <option value="female">{sq.form.female}</option>
+              <option value="other">{sq.form.other}</option>
             </select>
             {errors.gender && (
-              <p className="mt-1.5 text-sm text-red-600">{errors.gender.message}</p>
+              <p className="mt-1.5 text-sm" style={{ color: '#8B2E42' }}>{errors.gender.message}</p>
             )}
           </div>
         </div>
@@ -158,25 +163,26 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
         {/* Notes Field (Optional) */}
         <div>
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes <span className="text-gray-400">(Optional)</span>
+            {sq.form.notes}
           </label>
           <textarea
             id="notes"
             rows={4}
             disabled={isSubmitting}
-            className={`w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base resize-none ${
+            className={`w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:border-transparent transition-all text-base resize-none ${
               isSubmitting ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
-            placeholder="Any medical conditions, allergies, or special requirements..."
+            style={!isSubmitting ? { outlineColor: '#8B2E42' } : {}}
+            placeholder={sq.form.notes}
             {...register('notes', {
               maxLength: {
                 value: 500,
-                message: 'Notes cannot exceed 500 characters',
+                message: sq.validation.required,
               },
             })}
           />
           {errors.notes && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.notes.message}</p>
+            <p className="mt-1.5 text-sm" style={{ color: '#8B2E42' }}>{errors.notes.message}</p>
           )}
         </div>
 
@@ -184,7 +190,8 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          style={{ backgroundColor: '#8B2E42' }}
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">
@@ -192,16 +199,16 @@ export default function RegistrationForm({ onSubmit, isSubmitting }: Registratio
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Submitting...
+              {sq.loading.submitting}
             </span>
           ) : (
-            'Complete Registration'
+            sq.actions.submit
           )}
         </button>
 
         {/* Privacy Notice */}
         <p className="text-xs text-gray-500 text-center">
-          Your information is secure and will only be used for medical purposes
+          {sq.privacy.message}
         </p>
       </form>
     </div>

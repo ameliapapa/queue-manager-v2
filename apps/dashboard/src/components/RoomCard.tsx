@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Room } from '../types';
 import { useDashboard } from '../contexts/DashboardContext';
+import { sq } from '../i18n/sq';
 
 interface RoomCardProps {
   room: Room;
@@ -13,18 +14,18 @@ function RoomCard({ room, onAssignNext }: RoomCardProps) {
 
   const statusColors = {
     available: 'bg-green-100 border-green-500 text-green-800',
-    busy: 'bg-blue-100 border-blue-500 text-blue-800',
+    busy: 'bg-primary-100 border-primary-800 text-primary-900',
     paused: 'bg-yellow-100 border-yellow-500 text-yellow-800',
   };
 
   const statusLabels = {
-    available: 'Available',
-    busy: 'Busy',
-    paused: 'Paused',
+    available: sq.rooms.available,
+    busy: sq.rooms.occupied,
+    paused: sq.rooms.paused,
   };
 
   const handleComplete = async () => {
-    if (window.confirm('Mark consultation as complete?')) {
+    if (window.confirm(sq.alerts.completeConfirm.replace('{name}', room.currentPatient?.name || ''))) {
       try {
         await completeConsultation(room.id);
       } catch (error) {
@@ -46,13 +47,13 @@ function RoomCard({ room, onAssignNext }: RoomCardProps) {
       {/* Room Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-lg font-bold">Room {room.roomNumber}</h3>
+          <h3 className="text-lg font-bold">{sq.rooms.room} {room.roomNumber}</h3>
           <p className="text-sm opacity-80">{room.doctorName}</p>
         </div>
         <div className="flex items-center space-x-2">
           <div className={`w-3 h-3 rounded-full ${
             room.status === 'available' ? 'bg-green-500' :
-            room.status === 'busy' ? 'bg-blue-500' : 'bg-yellow-500'
+            room.status === 'busy' ? 'bg-primary-800' : 'bg-yellow-500'
           } animate-pulse`}></div>
           <span className="text-sm font-semibold">{statusLabels[room.status]}</span>
         </div>
@@ -62,17 +63,17 @@ function RoomCard({ room, onAssignNext }: RoomCardProps) {
       <div className="mb-4 min-h-[60px]">
         {room.currentPatient ? (
           <div className="bg-white bg-opacity-50 rounded-lg p-3">
-            <p className="text-xs font-medium opacity-70 mb-1">Current Patient</p>
+            <p className="text-xs font-medium opacity-70 mb-1">{sq.rooms.currentPatient}</p>
             <p className="font-bold">{room.currentPatient.name}</p>
             <p className="text-sm">
-              Queue: <span className="font-mono font-semibold">
-                Q{String(room.currentPatient.queueNumber).padStart(3, '0')}
+              {sq.queue.queueNumber}: <span className="font-mono font-semibold">
+                {String(room.currentPatient.queueNumber).padStart(3, '0')}
               </span>
             </p>
           </div>
         ) : (
           <div className="bg-white bg-opacity-30 rounded-lg p-3 text-center">
-            <p className="text-sm opacity-60">No patient</p>
+            <p className="text-sm opacity-60">{sq.rooms.noPatient}</p>
           </div>
         )}
       </div>
@@ -82,27 +83,30 @@ function RoomCard({ room, onAssignNext }: RoomCardProps) {
         {room.status === 'available' && (
           <button
             onClick={onAssignNext}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg font-semibold transition-all shadow-sm"
           >
-            Assign Next
+            {sq.rooms.assignNext}
           </button>
         )}
 
         {room.status === 'busy' && (
           <button
             onClick={handleComplete}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-all"
+            className="w-full text-white py-2.5 px-4 rounded-lg font-semibold transition-all shadow-sm"
+            style={{ backgroundColor: '#8B2E42' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6b1e2e'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8B2E42'}
           >
-            Complete
+            {sq.rooms.complete}
           </button>
         )}
 
         {room.status !== 'busy' && (
           <button
             onClick={handlePause}
-            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-medium transition-all"
+            className="w-full bg-gray-300 hover:bg-gray-400 text-gray-900 py-2.5 px-4 rounded-lg font-semibold transition-all shadow-sm"
           >
-            {room.status === 'paused' ? 'Resume' : 'Pause'}
+            {room.status === 'paused' ? sq.rooms.resume : sq.rooms.pause}
           </button>
         )}
       </div>

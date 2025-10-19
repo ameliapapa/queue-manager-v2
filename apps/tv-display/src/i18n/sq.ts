@@ -37,7 +37,7 @@ export const sq = {
   },
   messages: {
     scanQR: 'Skanoni QR kodin në biletën tuaj për të plotësuar regjistrimin',
-    registerNow: 'Regjistrohuni tani për shërbim më të shpejtë',
+    registerNow: 'Regjistrohuni tani për të takuar doktorin tuaj.',
     thankYou: 'Faleminderit për durimin tuaj',
     pleaseWait: 'Ju lutemi prisni derisa të thirret numri juaj',
   },

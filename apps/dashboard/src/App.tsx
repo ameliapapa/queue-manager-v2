@@ -6,6 +6,7 @@ import UnregisteredQueueList from './components/UnregisteredQueueList';
 import DailyStatsOverview from './components/DailyStatsOverview';
 import { Patient } from './types';
 import { formatDistanceToNow } from 'date-fns';
+import { sq } from './i18n/sq';
 import { midnightResetService } from '@shared/services/midnightResetService';
 import './styles/index.css';
 
@@ -19,8 +20,8 @@ function ModalLoadingFallback() {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-lg font-medium text-gray-700">Loading...</p>
+          <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-800 rounded-full animate-spin" />
+          <p className="text-lg font-medium text-gray-700">{sq.modal.loading}</p>
         </div>
       </div>
     </div>
@@ -61,14 +62,14 @@ function Dashboard() {
   // ✅ OPTIMIZED: No client-side sorting needed - registeredPatients already sorted by queueNumber
   const handleAssignNext = useCallback(async (roomId: string) => {
     if (registeredPatients.length === 0) {
-      alert('No patients in queue');
+      alert(sq.alerts.noPatients);
       return;
     }
 
     // ✅ FAST: Just take first patient (already sorted by queueNumber in Firestore query)
     const nextPatient = registeredPatients[0];
 
-    if (window.confirm(`Assign ${nextPatient.name} (${String(nextPatient.queueNumber).padStart(3, '0')}) to this room?`)) {
+    if (window.confirm(sq.alerts.assignConfirm.replace('{name}', nextPatient.name).replace('{number}', String(nextPatient.queueNumber).padStart(3, '0')))) {
       try {
         await assignPatient(nextPatient.id, roomId);
       } catch (error) {
@@ -84,21 +85,22 @@ function Dashboard() {
         <div className="max-w-[1920px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Receptionist Dashboard</h1>
-              <p className="text-sm text-gray-600">City General Hospital</p>
+              <h1 className="text-2xl font-bold text-gray-900">{sq.header.title}</h1>
+              <p className="text-sm text-gray-600">{sq.header.hospitalName}</p>
+              <p className="text-sm text-gray-600">{sq.header.hospitalSubtitle}</p>
             </div>
 
             {/* Status Indicator */}
             <div className="flex items-center space-x-4">
               {lastSync && (
                 <p className="text-sm text-gray-600">
-                  Last sync: {formatDistanceToNow(lastSync, { addSuffix: true })}
+                  {sq.header.lastSync}: {formatDistanceToNow(lastSync, { addSuffix: true })}
                 </p>
               )}
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary-800' : 'bg-red-500'} animate-pulse`}></div>
                 <span className="text-sm font-medium text-gray-700">
-                  {isConnected ? 'Live' : 'Disconnected'}
+                  {isConnected ? sq.header.connected : sq.header.disconnected}
                 </span>
               </div>
             </div>
@@ -110,7 +112,7 @@ function Dashboard() {
       <main className="max-w-[1920px] mx-auto p-6 space-y-6">
         {/* Rooms Section */}
         <section>
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Doctor Rooms</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">{sq.rooms.title}</h2>
           <div className="grid grid-cols-5 gap-4">
             {rooms.map(room => (
               <RoomCard
@@ -145,10 +147,10 @@ function Dashboard() {
           <div
             key={notif.id}
             className={`px-6 py-4 rounded-lg shadow-lg flex items-start space-x-3 min-w-[300px] animate-slide-in ${
-              notif.type === 'success' ? 'bg-green-600 text-white' :
+              notif.type === 'success' ? 'bg-primary-800 text-white' :
               notif.type === 'error' ? 'bg-red-600 text-white' :
               notif.type === 'warning' ? 'bg-yellow-600 text-white' :
-              'bg-blue-600 text-white'
+              'bg-primary-800 text-white'
             }`}
           >
             <div className="flex-1">

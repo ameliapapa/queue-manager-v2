@@ -50,7 +50,7 @@ export const sq = {
     maxAge: 'Mosha duhet të jetë më pak se {max} vjeç',
   },
   actions: {
-    submit: 'Paraqit Regjistrimin',
+    submit: 'Përfundo Regjistrimin',
     cancel: 'Anulo',
     back: 'Prapa',
     next: 'Tjetri',

@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { Patient } from '../types';
 import { safeFormatDistanceToNow } from '../utils/dateUtils';
+import { sq } from '../i18n/sq';
 
 interface RegisteredQueueListProps {
   patients: Patient[];
@@ -20,8 +21,8 @@ function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListPr
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-900">Registered Patients</h2>
-        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+        <h2 className="text-xl font-bold text-gray-900">{sq.queue.registeredTitle}</h2>
+        <span className="bg-primary-100 text-primary-900 px-3 py-1 rounded-full text-sm font-semibold">
           {filteredPatients.length}
         </span>
       </div>
@@ -30,10 +31,10 @@ function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListPr
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search by name or queue number..."
+          placeholder={`${sq.queue.name} ose ${sq.queue.queueNumber}...`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-800 focus:border-transparent"
         />
       </div>
 
@@ -44,21 +45,21 @@ function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListPr
             <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            <p>No registered patients</p>
+            <p>{sq.queue.noPatients}</p>
           </div>
         ) : (
           filteredPatients.map((patient, index) => (
             <div
               key={patient.id}
               onClick={() => onPatientClick(patient)}
-              className={`p-4 rounded-lg border border-gray-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all ${
+              className={`p-4 rounded-lg border border-gray-200 hover:border-primary-800 hover:shadow-md cursor-pointer transition-all ${
                 index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
-                    <span className="text-lg font-bold text-blue-600 font-mono">
+                    <span className="text-lg font-bold text-primary-800 font-mono">
                       {String(patient.queueNumber).padStart(3, '0')}
                     </span>
                     <span className="text-lg font-semibold text-gray-900">
@@ -66,8 +67,10 @@ function RegisteredQueueList({ patients, onPatientClick }: RegisteredQueueListPr
                     </span>
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>{patient.age} years</span>
-                    <span className="capitalize">{patient.gender}</span>
+                    <span>{patient.age} {sq.queue.age}</span>
+                    <span className="capitalize">
+                      {patient.gender === 'male' ? sq.queue.male : patient.gender === 'female' ? sq.queue.female : sq.queue.other}
+                    </span>
                     <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
                       {safeFormatDistanceToNow(patient.registeredAt)}
                     </span>

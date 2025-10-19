@@ -5,6 +5,7 @@ import RoomStatus from './components/RoomStatus';
 import RegisteredPatients from './components/RegisteredPatients';
 import UnregisteredQueue from './components/UnregisteredQueue';
 import { Patient, Room } from './services/dataService';
+import { sq } from './i18n/sq';
 import './styles/index.css';
 
 function App() {
@@ -153,12 +154,12 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+      <header className="text-white shadow-lg" style={{ backgroundColor: '#8B2E42' }}>
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold">City General Hospital</h1>
-              <p className="text-blue-100 mt-2 text-lg">Queue Management System</p>
+              <h1 className="text-4xl font-bold">{sq.header.hospitalName}</h1>
+              <p className="text-primary-100 mt-2 text-lg">{sq.header.hospitalSubtitle}</p>
             </div>
             <div className="text-right">
               <div className="flex items-center space-x-3">
@@ -168,11 +169,11 @@ function App() {
                   }`}
                 ></div>
                 <span className="text-sm font-medium">
-                  {isConnected ? 'Live Updates Active' : 'Connecting...'}
+                  {isConnected ? 'Përditësime Live' : 'Duke u lidhur...'}
                 </span>
               </div>
-              <div className="text-sm text-blue-200 mt-2">
-                Last updated: {lastUpdate.toLocaleTimeString()}
+              <div className="text-sm text-primary-200 mt-2">
+                {lastUpdate.toLocaleTimeString()}
               </div>
             </div>
           </div>

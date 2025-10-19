@@ -1,21 +1,21 @@
 {
   "projects": {
-    "default": "your-project-id"
+    "default": "geraldina-queue-manager"
   },
   "targets": {
-    "your-project-id": {
+    "geraldina-queue-manager": {
       "hosting": {
         "kiosk": [
-          "your-project-id-kiosk"
+          "geraldina-queue-manager-kiosk"
         ],
         "patient-registration": [
-          "your-project-id-patient"
+          "geraldina-queue-manager-patient"
         ],
         "receptionist-dashboard": [
-          "your-project-id-receptionist"
+          "geraldina-queue-manager-receptionist"
         ],
         "tv-display": [
-          "your-project-id-tv"
+          "geraldina-queue-manager-tv"
         ]
       }
     }

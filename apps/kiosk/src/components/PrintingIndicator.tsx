@@ -1,3 +1,5 @@
+import { sq } from '../i18n/sq';
+
 interface PrintingIndicatorProps {
   queueNumber?: number;
 }
@@ -8,9 +10,13 @@ export function PrintingIndicator({ queueNumber }: PrintingIndicatorProps) {
       <div className="max-w-md w-full text-center">
         {/* Animated printer icon */}
         <div className="relative mb-8">
-          <div className="w-32 h-32 mx-auto bg-primary-100 rounded-full flex items-center justify-center">
+          <div
+            className="w-32 h-32 mx-auto rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#fad1d9' }}
+          >
             <svg
-              className="w-16 h-16 text-primary-600 animate-bounce"
+              className="w-16 h-16 animate-bounce"
+              style={{ color: '#8B2E42' }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -26,50 +32,59 @@ export function PrintingIndicator({ queueNumber }: PrintingIndicatorProps) {
 
           {/* Pulsing rings */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full bg-primary-200 animate-ping opacity-25" />
+            <div
+              className="w-32 h-32 rounded-full animate-ping opacity-25"
+              style={{ backgroundColor: '#fad1d9' }}
+            />
           </div>
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{ animationDelay: '0.5s' }}
           >
-            <div className="w-40 h-40 rounded-full bg-primary-100 animate-ping opacity-20" />
+            <div
+              className="w-40 h-40 rounded-full animate-ping opacity-20"
+              style={{ backgroundColor: '#fce7eb' }}
+            />
           </div>
         </div>
 
         {/* Queue number display */}
         {queueNumber && (
           <div className="mb-6">
-            <p className="text-gray-600 text-lg mb-2">Your Queue Number</p>
-            <div className="text-6xl font-bold text-primary-600 mb-4">
-              Q{String(queueNumber).padStart(3, '0')}
+            <p className="text-gray-600 text-lg mb-2">{sq.success.yourNumber}</p>
+            <div
+              className="text-6xl font-bold mb-4"
+              style={{ color: '#8B2E42' }}
+            >
+              {String(queueNumber).padStart(3, '0')}
             </div>
           </div>
         )}
 
         {/* Status message */}
         <h2 className="text-3xl font-bold text-gray-800 mb-4">
-          Printing Your Ticket...
+          {sq.printing.title}
         </h2>
 
         <p className="text-xl text-gray-600 mb-8">
-          Please wait while we print your queue ticket
+          {sq.printing.subtitle}
         </p>
 
         {/* Progress bar */}
         <div className="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
-          <div className="h-full bg-primary-600 rounded-full animate-progress" />
+          <div
+            className="h-full rounded-full animate-progress"
+            style={{ backgroundColor: '#8B2E42' }}
+          />
         </div>
 
         {/* Instructions */}
-        <div className="bg-primary-50 rounded-lg p-6 mt-8">
+        <div
+          className="rounded-lg p-6 mt-8"
+          style={{ backgroundColor: '#fdf2f4' }}
+        >
           <p className="text-gray-700 text-lg">
-            <strong className="text-primary-700">Next steps:</strong>
-            <br />
-            1. Collect your printed ticket
-            <br />
-            2. Scan the QR code to register
-            <br />
-            3. Wait for your number to be called
+            <strong style={{ color: '#8B2E42' }}>{sq.printing.almostDone}</strong>
           </p>
         </div>
       </div>

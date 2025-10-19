@@ -9,6 +9,7 @@ import { ErrorScreen } from './components/ErrorScreen';
 import { generateQueueNumber } from './services/queueService';
 import { printTicket } from './services/printService';
 import { midnightResetService } from '@shared/services/midnightResetService';
+import { sq } from './i18n/sq';
 
 // App states
 type AppState = 'IDLE' | 'ACTIVE' | 'GENERATING' | 'PRINTING' | 'SUCCESS' | 'ERROR';
@@ -178,10 +179,10 @@ function App() {
             <div className="max-w-6xl mx-auto flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  Queue Number System
+                  {sq.activeScreen.title}
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Get your queue number in seconds
+                  {sq.activeScreen.subtitle}
                 </p>
               </div>
               <button
@@ -201,7 +202,7 @@ function App() {
                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                   />
                 </svg>
-                Back
+                {sq.activeScreen.back}
               </button>
             </div>
           </header>
@@ -210,28 +211,6 @@ function App() {
           <main className="flex-1 flex items-center justify-center">
             <GetNumberButton onPress={handleGenerateNumber} />
           </main>
-
-          {/* Footer */}
-          <footer className="bg-white border-t py-6 px-8">
-            <div className="max-w-6xl mx-auto">
-              {queueStats && (
-                <div className="flex justify-center gap-12">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary-600">
-                      {queueStats.totalToday}
-                    </div>
-                    <div className="text-gray-600">Patients Today</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-yellow-600">
-                      {queueStats.pending + queueStats.registered}
-                    </div>
-                    <div className="text-gray-600">Currently Waiting</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </footer>
         </div>
       );
 
@@ -239,11 +218,17 @@ function App() {
       return (
         <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 border-8 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            <div
+              className="w-24 h-24 mx-auto mb-6 border-8 rounded-full animate-spin"
+              style={{
+                borderColor: '#fad1d9',
+                borderTopColor: '#8B2E42',
+              }}
+            />
             <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Generating Queue Number...
+              {sq.generating.title}
             </h2>
-            <p className="text-xl text-gray-600">Please wait a moment</p>
+            <p className="text-xl text-gray-600">{sq.generating.subtitle}</p>
           </div>
         </div>
       );

@@ -51,7 +51,7 @@ function UnregisteredQueueList({ queue, onRegister }: UnregisteredQueueListProps
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl font-bold text-orange-600 font-mono">
-                      Q{String(item.queueNumber).padStart(3, '0')}
+                      {String(item.queueNumber).padStart(3, '0')}
                     </span>
                     {urgent && (
                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">

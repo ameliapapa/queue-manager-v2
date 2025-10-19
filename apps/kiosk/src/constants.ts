@@ -4,5 +4,6 @@ export const UPDATE_INTERVALS = {
 } as const;
 
 export const HOSPITAL_CONFIG = {
-  name: 'City General Hospital',
+  name: 'Spitali Universitar Obstetrik Gjinekologjik',
+  subtitle: 'Mbretëresha Geraldinë',
 } as const;

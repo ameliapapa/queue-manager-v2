@@ -56,7 +56,7 @@ export async function mockGeneratePrintTicket(
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
       <rect width="200" height="200" fill="white"/>
       <rect x="40" y="40" width="120" height="120" fill="black"/>
-      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20">Q${String(queueNumber).padStart(3, '0')}</text>
+      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20">${String(queueNumber).padStart(3, '0')}</text>
     </svg>
   `)}`;
 
@@ -125,7 +125,7 @@ export async function mockGeneratePrintTicket(
     </div>
     <div class="queue-section">
       <div class="queue-label">Your Queue Number</div>
-      <div class="queue-number">Q${String(queueNumber).padStart(3, '0')}</div>
+      <div class="queue-number">${String(queueNumber).padStart(3, '0')}</div>
     </div>
     <div class="qr-section">
       <div class="qr-label">Scan to Register</div>

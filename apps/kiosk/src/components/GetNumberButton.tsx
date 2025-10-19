@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sq } from '../i18n/sq';
 
 interface GetNumberButtonProps {
   onPress: () => void;
@@ -29,9 +30,6 @@ export function GetNumberButton({ onPress, disabled = false }: GetNumberButtonPr
           relative
           w-80 h-80
           rounded-full
-          bg-gradient-to-br from-primary-500 to-primary-700
-          hover:from-primary-600 hover:to-primary-800
-          active:from-primary-700 active:to-primary-900
           text-white
           font-bold
           text-3xl
@@ -44,11 +42,17 @@ export function GetNumberButton({ onPress, disabled = false }: GetNumberButtonPr
           ${isPressed ? 'scale-95' : 'scale-100'}
           ${!disabled ? 'hover:scale-105' : ''}
         `}
+        style={{
+          backgroundColor: '#8B2E42',
+        }}
         aria-label="Get queue number"
       >
         {/* Pulse animation ring */}
         {!disabled && (
-          <span className="absolute inset-0 rounded-full bg-primary-400 animate-ping opacity-25" />
+          <span
+            className="absolute inset-0 rounded-full animate-ping opacity-25"
+            style={{ backgroundColor: '#8B2E42' }}
+          />
         )}
 
         {/* Button content */}
@@ -70,9 +74,7 @@ export function GetNumberButton({ onPress, disabled = false }: GetNumberButtonPr
 
           {/* Text */}
           <span className="leading-tight">
-            Get Queue
-            <br />
-            Number
+            {sq.button.getNumber}
           </span>
         </div>
 
@@ -84,7 +86,7 @@ export function GetNumberButton({ onPress, disabled = false }: GetNumberButtonPr
 
       {/* Instructions */}
       <p className="mt-8 text-xl text-gray-600 text-center max-w-md">
-        Press the button above to receive your queue number and ticket
+        {sq.button.tapToGetNumber}
       </p>
     </div>
   );

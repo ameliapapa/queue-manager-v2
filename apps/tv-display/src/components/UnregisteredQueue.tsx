@@ -1,10 +1,12 @@
+import { memo } from 'react';
 import { Patient } from '../services/dataService';
 
 interface UnregisteredQueueProps {
   patients: Patient[];
 }
 
-export default function UnregisteredQueue({ patients }: UnregisteredQueueProps) {
+// ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
+function UnregisteredQueue({ patients }: UnregisteredQueueProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="bg-amber-600 text-white px-6 py-4">
@@ -44,7 +46,7 @@ export default function UnregisteredQueue({ patients }: UnregisteredQueueProps) 
                 >
                   <div className="text-center">
                     <div className="text-2xl font-bold text-amber-900">
-                      Q{String(patient.queueNumber).padStart(3, '0')}
+                      {String(patient.queueNumber).padStart(3, '0')}
                     </div>
                     <div className="text-xs text-amber-600 mt-1 font-medium">
                       Scan QR Code
@@ -84,3 +86,6 @@ export default function UnregisteredQueue({ patients }: UnregisteredQueueProps) 
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo to prevent unnecessary re-renders
+export default memo(UnregisteredQueue);

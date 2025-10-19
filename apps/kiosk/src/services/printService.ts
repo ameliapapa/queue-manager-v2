@@ -4,6 +4,8 @@
  * Works with thermal printers or standard printers
  */
 
+import logoSvg from '../assets/mbreteresha_geraldine.svg';
+
 /**
  * Generate and print a ticket
  * @param queueNumber The queue number to print
@@ -27,7 +29,8 @@ export async function printTicket(
     const ticketHtml = generateTicketHTML(
       queueNumber,
       registrationUrl,
-      qrCodeDataUrl
+      qrCodeDataUrl,
+      logoSvg
     );
 
 
@@ -48,16 +51,22 @@ export async function printTicket(
 function generateTicketHTML(
   queueNumber: number,
   registrationUrl: string,
-  qrCodeDataUrl?: string
+  qrCodeDataUrl?: string,
+  hospitalLogoUrl?: string
 ): string {
-  const timestamp = new Date().toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const now = new Date();
+
+  // Format date in Albanian: dd.mm.yyyy
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateStr = `${day}.${month}.${year}`;
+
+  // Format time: HH:mm:ss
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}:${seconds}`;
 
   // Use provided QR code or generate a simple placeholder
   const queueNumberPadded = String(queueNumber).padStart(3, '0');
@@ -67,7 +76,7 @@ function generateTicketHTML(
       `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
       <rect width="200" height="200" fill="white"/>
       <rect x="40" y="40" width="120" height="120" fill="black"/>
-      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-family="Arial">Q${queueNumberPadded}</text>
+      <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-family="Arial">${queueNumberPadded}</text>
     </svg>`
     )}`;
 
@@ -77,6 +86,9 @@ function generateTicketHTML(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -85,122 +97,124 @@ function generateTicketHTML(
     }
 
     @page {
-      size: 80mm 120mm;
-      margin: 5mm;
+      size: 80mm auto;
+      margin: 0;
     }
 
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Poppins', 'Arial', sans-serif;
       width: 80mm;
-      padding: 5mm;
+      padding: 8mm;
       background: white;
     }
 
     .ticket {
       text-align: center;
-      border: 2px solid #000;
-      padding: 10px;
+      background: white;
+      padding: 0;
     }
 
-    .header {
-      border-bottom: 2px dashed #000;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
+    .logo-container {
+      margin: 0 auto 10px;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: brightness(0);
     }
 
-    .hospital-name {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 5px;
-      text-transform: uppercase;
+    .logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
-    .timestamp {
-      font-size: 10px;
-      color: #666;
-    }
-
-    .queue-section {
-      margin: 20px 0;
+    .datetime {
+      font-size: 15px;
+      font-weight: 400;
+      color: #000;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
     }
 
     .queue-label {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 5px;
+      font-size: 13px;
+      font-weight: 400;
+      color: #000;
+      margin-bottom: 6px;
+    }
+
+    .queue-number-box {
+      background: white;
+      border: 1px solid #000;
+      border-radius: 25px;
+      padding: 12px 25px;
+      margin: 6px auto 10px;
+      display: inline-block;
+      min-width: 180px;
     }
 
     .queue-number {
-      font-size: 48px;
-      font-weight: bold;
+      font-size: 64px;
+      font-weight: 400;
       color: #000;
-      letter-spacing: 2px;
+      letter-spacing: 6px;
+      line-height: 1;
     }
 
-    .qr-section {
-      margin: 20px 0;
-      padding: 10px 0;
-      border-top: 2px dashed #000;
-      border-bottom: 2px dashed #000;
+    .qr-instructions {
+      font-size: 12px;
+      font-weight: 400;
+      color: #000;
+      margin: 8px 0 6px;
+      line-height: 1.3;
+      padding: 0 10px;
     }
 
-    .qr-label {
-      font-size: 11px;
-      margin-bottom: 10px;
-      font-weight: bold;
+    .qr-code-container {
+      margin: 6px auto 0;
+      background: white;
+      padding: 0;
+      border-radius: 0;
+      display: inline-block;
     }
 
     .qr-code {
-      width: 150px;
-      height: 150px;
-      margin: 0 auto;
-    }
-
-    .instructions {
-      font-size: 10px;
-      line-height: 1.4;
-      margin: 10px 0;
-      padding: 0 5px;
-    }
-
-    .footer {
-      font-size: 9px;
-      color: #666;
-      margin-top: 10px;
-      font-style: italic;
+      width: 100px;
+      height: 100px;
+      display: block;
     }
 
     @media print {
       body {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        color-adjust: exact;
       }
     }
   </style>
 </head>
 <body>
   <div class="ticket">
-    <div class="header">
-      <div class="hospital-name">City General Hospital</div>
-      <div class="timestamp">${timestamp}</div>
+    <div class="logo-container">
+      <img src="${hospitalLogoUrl || ''}" alt="Hospital Logo" class="logo">
     </div>
 
-    <div class="queue-section">
-      <div class="queue-label">Your Queue Number</div>
-      <div class="queue-number">Q${queueNumberPadded}</div>
+    <div class="datetime">${dateStr}    ${timeStr}</div>
+
+    <div class="queue-label">Numri juaj në rradhë është:</div>
+
+    <div class="queue-number-box">
+      <div class="queue-number">${queueNumberPadded}</div>
     </div>
 
-    <div class="qr-section">
-      <div class="qr-label">Scan to Register</div>
+    <div class="qr-instructions">
+      Skanoni kodin QR për të plotësuar regjistrimin, ose drejtohuni drejt recepsionit:
+    </div>
+
+    <div class="qr-code-container">
       <img src="${qrCode}" alt="QR Code" class="qr-code">
-    </div>
-
-    <div class="instructions">
-      Please scan the QR code above to complete your registration. You will be called when it's your turn.
-    </div>
-
-    <div class="footer">
-      Thank you for your patience
     </div>
   </div>
 </body>
@@ -320,7 +334,8 @@ export async function previewTicket(
     const ticketHtml = generateTicketHTML(
       queueNumber,
       registrationUrl,
-      qrCodeDataUrl
+      qrCodeDataUrl,
+      logoSvg
     );
 
     // Open in new window for preview

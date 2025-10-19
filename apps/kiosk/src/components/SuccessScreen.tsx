@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { sq } from '../i18n/sq';
 
 interface SuccessScreenProps {
   queueNumber: number;
@@ -20,13 +21,17 @@ export function SuccessScreen({
   }, [onTimeout, autoReturnDelay]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-500 to-green-700 flex flex-col items-center justify-center p-8">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-8"
+      style={{ backgroundColor: '#8B2E42' }}
+    >
       <div className="max-w-2xl w-full text-center">
         {/* Success checkmark animation */}
         <div className="relative mb-8">
           <div className="w-40 h-40 mx-auto bg-white rounded-full flex items-center justify-center shadow-2xl">
             <svg
-              className="w-24 h-24 text-green-600 animate-scale-in"
+              className="w-24 h-24 animate-scale-in"
+              style={{ color: '#8B2E42' }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -48,63 +53,56 @@ export function SuccessScreen({
 
         {/* Success message */}
         <h1 className="text-5xl font-bold text-white mb-6 animate-fade-in">
-          Success!
+          {sq.success.title}
         </h1>
 
         {/* Queue number */}
         <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 mb-8 animate-slide-up">
-          <p className="text-white text-2xl mb-4">Your Queue Number</p>
+          <p className="text-white text-2xl mb-4">{sq.success.yourNumber}</p>
           <div className="text-8xl font-bold text-white mb-2">
-            Q{String(queueNumber).padStart(3, '0')}
+            {String(queueNumber).padStart(3, '0')}
           </div>
-          <p className="text-green-100 text-xl">
-            Please save this number
+          <p className="text-white text-xl opacity-90">
+            {sq.success.takePaper}
           </p>
         </div>
 
         {/* Instructions */}
         <div className="bg-white rounded-2xl p-8 mb-6 text-left shadow-xl">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-            <svg
-              className="w-8 h-8 text-green-600 mr-3"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Please Collect Your Ticket
-          </h3>
-
           <div className="space-y-4 text-lg text-gray-700">
             <div className="flex items-start">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold mr-4 flex-shrink-0">
+              <span
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold mr-4 flex-shrink-0"
+                style={{ backgroundColor: '#fad1d9', color: '#8B2E42' }}
+              >
                 1
               </span>
               <p>
-                <strong>Take your printed ticket</strong> from the printer below
+                {sq.success.takePaper}
               </p>
             </div>
 
             <div className="flex items-start">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold mr-4 flex-shrink-0">
+              <span
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold mr-4 flex-shrink-0"
+                style={{ backgroundColor: '#fad1d9', color: '#8B2E42' }}
+              >
                 2
               </span>
               <p>
-                <strong>Scan the QR code</strong> on your ticket to complete
-                registration
+                {sq.success.scanQR}
               </p>
             </div>
 
             <div className="flex items-start">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold mr-4 flex-shrink-0">
+              <span
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold mr-4 flex-shrink-0"
+                style={{ backgroundColor: '#fad1d9', color: '#8B2E42' }}
+              >
                 3
               </span>
               <p>
-                <strong>Wait in the lobby</strong> until your number is called
+                {sq.idleScreen.assistance}
               </p>
             </div>
           </div>
@@ -112,7 +110,7 @@ export function SuccessScreen({
 
         {/* Auto-return countdown */}
         <p className="text-white text-lg animate-pulse">
-          Returning to home screen in {autoReturnDelay / 1000} seconds...
+          {sq.success.returning} {autoReturnDelay / 1000} {sq.success.seconds}...
         </p>
       </div>
 

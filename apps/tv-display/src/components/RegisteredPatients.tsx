@@ -1,10 +1,12 @@
+import { memo } from 'react';
 import { Patient } from '../services/dataService';
 
 interface RegisteredPatientsProps {
   patients: Patient[];
 }
 
-export default function RegisteredPatients({ patients }: RegisteredPatientsProps) {
+// ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
+function RegisteredPatients({ patients }: RegisteredPatientsProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="bg-emerald-600 text-white px-6 py-4">
@@ -52,7 +54,7 @@ export default function RegisteredPatients({ patients }: RegisteredPatientsProps
                           : 'bg-gray-200 text-gray-700'
                       }`}
                     >
-                      Q{String(patient.queueNumber).padStart(3, '0')}
+                      {String(patient.queueNumber).padStart(3, '0')}
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900 text-lg">
@@ -84,3 +86,6 @@ export default function RegisteredPatients({ patients }: RegisteredPatientsProps
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo to prevent unnecessary re-renders
+export default memo(RegisteredPatients);

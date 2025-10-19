@@ -13,7 +13,7 @@ export default function QueueNumber({ queueNumber }: QueueNumberProps) {
       <div className="px-6 py-8 text-center">
         <div className="inline-flex items-center justify-center">
           <span className="text-7xl sm:text-8xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Q{String(queueNumber).padStart(3, '0')}
+            {String(queueNumber).padStart(3, '0')}
           </span>
         </div>
         <p className="mt-4 text-gray-600 text-sm">

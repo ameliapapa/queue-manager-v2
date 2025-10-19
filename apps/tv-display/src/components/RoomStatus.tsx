@@ -1,10 +1,12 @@
+import { memo } from 'react';
 import { Room } from '../services/dataService';
 
 interface RoomStatusProps {
   rooms: Room[];
 }
 
-export default function RoomStatus({ rooms }: RoomStatusProps) {
+// ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
+function RoomStatus({ rooms }: RoomStatusProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="bg-blue-600 text-white px-6 py-4">
@@ -75,3 +77,6 @@ export default function RoomStatus({ rooms }: RoomStatusProps) {
     </div>
   );
 }
+
+// ✅ OPTIMIZED: Export with React.memo to prevent unnecessary re-renders
+export default memo(RoomStatus);

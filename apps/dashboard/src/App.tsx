@@ -68,7 +68,7 @@ function Dashboard() {
     // ✅ FAST: Just take first patient (already sorted by queueNumber in Firestore query)
     const nextPatient = registeredPatients[0];
 
-    if (window.confirm(`Assign ${nextPatient.name} (Q${String(nextPatient.queueNumber).padStart(3, '0')}) to this room?`)) {
+    if (window.confirm(`Assign ${nextPatient.name} (${String(nextPatient.queueNumber).padStart(3, '0')}) to this room?`)) {
       try {
         await assignPatient(nextPatient.id, roomId);
       } catch (error) {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { HOSPITAL_CONFIG } from '../constants';
+import { HospitalLogo } from './HospitalLogo';
+import { sq } from '../i18n/sq';
 
 interface IdleScreenProps {
   onWake: () => void;
@@ -23,21 +25,22 @@ export function IdleScreen({ onWake, queueStats }: IdleScreenProps) {
   }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    });
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const days = ['E Diel', 'E Hënë', 'E Martë', 'E Mërkurë', 'E Enjte', 'E Premte', 'E Shtunë'];
+    const months = ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor', 'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'];
+
+    const dayName = days[date.getDay()];
+    const day = date.getDate();
+    const monthName = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${dayName}, ${day} ${monthName} ${year}`;
   };
 
   const waitingCount = queueStats
@@ -46,60 +49,44 @@ export function IdleScreen({ onWake, queueStats }: IdleScreenProps) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex flex-col items-center justify-center p-8 cursor-pointer"
+      className="min-h-screen flex flex-col items-center justify-center p-8 cursor-pointer"
+      style={{
+        backgroundColor: '#8B2E42',
+      }}
       onClick={onWake}
     >
       {/* Hospital Logo/Name */}
       <div className="text-center mb-12">
-        <div className="w-32 h-32 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-2xl">
-          <svg
-            className="w-20 h-20 text-primary-600"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-              clipRule="evenodd"
-            />
-          </svg>
+        {/* Circular white background - Figma specs */}
+        <div
+          className="mx-auto mb-6 bg-white flex items-center justify-center"
+          style={{
+            width: '284px',
+            height: '283px',
+            borderRadius: '16777200px',
+            flexShrink: 0,
+          }}
+        >
+          <HospitalLogo
+            className="object-contain"
+            style={{ width: '320px', height: '320px', flexShrink: 0 }}
+          />
         </div>
-        <h1 className="text-5xl font-bold text-white mb-4">
-          {HOSPITAL_CONFIG.name}
+        <h1 className="text-4xl font-bold text-white mb-2">
+          {sq.idleScreen.hospitalName}
         </h1>
-        <p className="text-2xl text-primary-100">Queue Management System</p>
+        <p className="text-4xl text-white font-bold">
+          {sq.idleScreen.subtitle}
+        </p>
       </div>
 
       {/* Current Time */}
       <div className="text-center mb-12">
-        <div className="text-6xl font-bold text-white mb-2">
+        <div className="text-4xl font-bold text-white mb-2">
           {formatTime(currentTime)}
         </div>
-        <div className="text-xl text-primary-100">{formatDate(currentTime)}</div>
+        <div className="text-xl text-white">{formatDate(currentTime)}</div>
       </div>
-
-      {/* Queue Status */}
-      {queueStats && (
-        <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 mb-12 min-w-[400px]">
-          <div className="text-center">
-            <p className="text-primary-100 text-lg mb-4">Current Queue Status</p>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <div className="text-4xl font-bold text-white mb-2">
-                  {waitingCount}
-                </div>
-                <div className="text-primary-100">Waiting</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-white mb-2">
-                  {queueStats.totalToday}
-                </div>
-                <div className="text-primary-100">Today</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Touch to Wake */}
       <div className="text-center">
@@ -119,17 +106,14 @@ export function IdleScreen({ onWake, queueStats }: IdleScreenProps) {
           </svg>
         </div>
         <p className="text-2xl text-white font-semibold mb-2">
-          Touch anywhere to get your queue number
-        </p>
-        <p className="text-lg text-primary-100">
-          Fast, easy, and contactless service
+          {sq.idleScreen.touchToGetNumber}
         </p>
       </div>
 
       {/* Footer */}
       <div className="absolute bottom-8 text-center text-primary-100">
         <p className="text-sm">
-          For assistance, please contact reception
+          {sq.idleScreen.assistance}
         </p>
       </div>
     </div>

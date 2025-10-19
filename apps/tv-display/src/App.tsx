@@ -1,108 +1,154 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '@shared/firebase/config';
 import RoomStatus from './components/RoomStatus';
 import RegisteredPatients from './components/RegisteredPatients';
 import UnregisteredQueue from './components/UnregisteredQueue';
-import { websocketClient } from './services/websocket';
-import {
-  getAllPatients,
-  getRoomStatuses,
-  getRegisteredWaitingPatients,
-  getUnregisteredPatients,
-  Patient,
-  Room,
-} from './services/dataService';
+import { Patient, Room } from './services/dataService';
 import './styles/index.css';
 
 function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [registeredPatients, setRegisteredPatients] = useState<Patient[]>([]);
-  const [unregisteredPatients, setUnregisteredPatients] = useState<Patient[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  // Fetch and process data
-  const fetchData = async () => {
-    try {
-      const allPatients = await getAllPatients();
-      setPatients(allPatients);
-
-      // Process data for each column
-      setRooms(getRoomStatuses(allPatients));
-      setRegisteredPatients(getRegisteredWaitingPatients(allPatients));
-      setUnregisteredPatients(getUnregisteredPatients(allPatients));
-      setLastUpdate(new Date());
-
-      console.log('📊 Data refreshed:', {
-        total: allPatients.length,
-        inRooms: allPatients.filter((p) => p.status === 'called').length,
-        registered: getRegisteredWaitingPatients(allPatients).length,
-        unregistered: getUnregisteredPatients(allPatients).length,
-      });
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
+  // Helper function to get today's date string
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   };
 
-  // Connect to WebSocket on mount
+  // ✅ OPTIMIZED: Set up Firestore real-time listeners (no more WebSocket polling!)
   useEffect(() => {
-    websocketClient.connect('http://localhost:3005');
+    const unsubscribers: (() => void)[] = [];
+    const dateString = getTodayDateString();
 
-    const checkConnection = setInterval(() => {
-      setIsConnected(websocketClient.isConnected());
-    }, 1000);
+    // Listener 1: All patients for today
+    const patientsQ = query(
+      collection(db, 'patients'),
+      orderBy('queueNumber', 'asc'),
+      limit(100)
+    );
 
+    const unsubPatients = onSnapshot(
+      patientsQ,
+      (snapshot) => {
+        // ✅ OPTIMIZED: Use docChanges for incremental updates
+        setPatients(prev => {
+          const patientsMap = new Map(prev.map(p => [p.id, p]));
+
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+            const createdAt = data.createdAt?.toDate();
+
+            // Only include today's patients
+            if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
+              if (change.type === 'removed' || change.type === 'modified') {
+                patientsMap.delete(doc.id);
+              }
+              return;
+            }
+
+            const patient: Patient = {
+              id: doc.id,
+              queueNumber: data.queueNumber,
+              name: data.name,
+              phone: data.phone,
+              age: data.age,
+              gender: data.gender,
+              status: data.status || 'pending',
+              roomNumber: data.roomNumber,
+              registeredAt: data.registeredAt?.toDate(),
+              calledAt: data.calledAt?.toDate(),
+              completedAt: data.completedAt?.toDate(),
+              createdAt: data.createdAt?.toDate(),
+            };
+
+            if (change.type === 'removed') {
+              patientsMap.delete(doc.id);
+            } else {
+              patientsMap.set(doc.id, patient);
+            }
+          });
+
+          const updatedPatients = Array.from(patientsMap.values());
+          setLastUpdate(new Date());
+          return updatedPatients;
+        });
+        setIsConnected(true);
+      },
+      (error) => {
+        console.error('❌ Error listening to patients:', error);
+        setIsConnected(false);
+      }
+    );
+    unsubscribers.push(unsubPatients);
+
+    // Listener 2: Rooms from Firestore
+    const roomsQ = query(
+      collection(db, 'rooms'),
+      orderBy('roomNumber', 'asc')
+    );
+
+    const unsubRooms = onSnapshot(
+      roomsQ,
+      (snapshot) => {
+        // ✅ OPTIMIZED: Use docChanges for incremental updates
+        setRooms(prev => {
+          const roomsMap = new Map(prev.map(r => [r.number, r]));
+
+          snapshot.docChanges().forEach(change => {
+            const doc = change.doc;
+            const data = doc.data();
+
+            const room: Room = {
+              number: data.roomNumber,
+              status: data.status === 'paused' ? 'available' :
+                      data.currentPatient ? 'occupied' : 'available',
+              currentPatient: data.currentPatient ? {
+                id: data.currentPatient.id || '',
+                queueNumber: data.currentPatient.queueNumber || 0,
+                name: data.currentPatient.name,
+                status: 'called',
+              } : undefined,
+            };
+
+            if (change.type === 'removed') {
+              roomsMap.delete(data.roomNumber);
+            } else {
+              roomsMap.set(data.roomNumber, room);
+            }
+          });
+
+          return Array.from(roomsMap.values()).sort((a, b) => a.number - b.number);
+        });
+      },
+      (error) => {
+        console.error('❌ Error listening to rooms:', error);
+      }
+    );
+    unsubscribers.push(unsubRooms);
+
+    // Cleanup: unsubscribe from all listeners on unmount
     return () => {
-      clearInterval(checkConnection);
-      websocketClient.disconnect();
+      unsubscribers.forEach(unsub => unsub());
     };
-  }, []);
+  }, []); // ✅ Only run ONCE on mount
 
-  // Initial data fetch and periodic refresh
-  useEffect(() => {
-    fetchData();
+  // ✅ OPTIMIZED: Use useMemo to compute derived data (only recompute when patients change)
+  const registeredPatients = useMemo(() => {
+    return patients
+      .filter((p) => p.status === 'registered' && p.name)
+      .sort((a, b) => a.queueNumber - b.queueNumber);
+  }, [patients]);
 
-    // Refresh every 30 seconds as backup
-    const interval = setInterval(fetchData, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Listen to WebSocket events for real-time updates
-  useEffect(() => {
-    const unsubQueue = websocketClient.on('queue:issued', (data) => {
-      console.log('📢 Queue issued:', data);
-      fetchData();
-    });
-
-    const unsubRegistered = websocketClient.on('patient:registered', (data) => {
-      console.log('📢 Patient registered:', data);
-      fetchData();
-    });
-
-    const unsubCalled = websocketClient.on('patient:called', (data) => {
-      console.log('📢 Patient called:', data);
-      fetchData();
-    });
-
-    const unsubCompleted = websocketClient.on('patient:completed', (data) => {
-      console.log('📢 Patient completed:', data);
-      fetchData();
-    });
-
-    const unsubRoom = websocketClient.on('room:updated', (data) => {
-      console.log('📢 Room updated:', data);
-      fetchData();
-    });
-
-    return () => {
-      unsubQueue();
-      unsubRegistered();
-      unsubCalled();
-      unsubCompleted();
-      unsubRoom();
-    };
-  }, []);
+  const unregisteredPatients = useMemo(() => {
+    return patients
+      .filter((p) => p.status === 'pending' || !p.name)
+      .sort((a, b) => a.queueNumber - b.queueNumber);
+  }, [patients]);
 
   return (
     <div className="min-h-screen bg-gray-100">

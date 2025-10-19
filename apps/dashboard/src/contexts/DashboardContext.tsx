@@ -7,7 +7,7 @@ import {
   limit,
   onSnapshot,
 } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { db } from '../firebase';
 import {
   Room,
   Patient,
@@ -129,10 +129,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
     // Listener 2: Unregistered patients (status: 'pending')
     // ✅ OPTIMIZED: Use snapshot changes for incremental updates
+    // Note: Removed orderBy to avoid needing composite index - sort in JS instead
     const unregisteredQ = query(
       collection(db, 'patients'),
       where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc'),
       limit(100)
     );
 
@@ -169,7 +169,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             }
           });
 
-          const queue = Array.from(queueMap.values());
+          // Sort by issuedAt descending (newest first)
+          const queue = Array.from(queueMap.values()).sort((a, b) => {
+            const timeA = a.issuedAt?.getTime() || 0;
+            const timeB = b.issuedAt?.getTime() || 0;
+            return timeB - timeA;
+          });
 
           return {
             ...prev,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { db } from './firebase';
 import RoomStatus from './components/RoomStatus';
 import RegisteredPatients from './components/RegisteredPatients';
 import UnregisteredQueue from './components/UnregisteredQueue';
@@ -106,7 +106,7 @@ function App() {
 
             const room: Room = {
               number: data.roomNumber,
-              status: data.status === 'paused' ? 'available' :
+              status: data.status === 'paused' ? 'paused' :
                       data.currentPatient ? 'occupied' : 'available',
               currentPatient: data.currentPatient ? {
                 id: data.currentPatient.id || '',

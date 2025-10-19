@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { db } from './firebase';
 import { IdleScreen } from './components/IdleScreen';
 import { GetNumberButton } from './components/GetNumberButton';
 import { PrintingIndicator } from './components/PrintingIndicator';

@@ -42,16 +42,6 @@ export default function SuccessScreen({ queueNumber }: SuccessScreenProps) {
               <span style={{ color: '#8B2E42' }} className="font-semibold text-sm">1</span>
             </div>
             <div>
-              <p className="text-gray-700 font-medium">{sq.success.waitingArea}</p>
-              <p className="text-sm text-gray-500">{sq.success.instructions}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#fad1d9' }}>
-              <span style={{ color: '#8B2E42' }} className="font-semibold text-sm">2</span>
-            </div>
-            <div>
               <p className="text-gray-700 font-medium">{sq.success.instructions}</p>
             </div>
           </div>
@@ -68,15 +58,6 @@ export default function SuccessScreen({ queueNumber }: SuccessScreenProps) {
             </div>
           </div>
         </div>
-
-        {/* Close Button */}
-        <button
-          onClick={() => window.close()}
-          className="w-full mt-6 hover:opacity-80 text-white py-3 px-6 rounded-xl font-medium transition-all"
-          style={{ backgroundColor: '#8B2E42' }}
-        >
-          {sq.actions.confirm}
-        </button>
       </div>
     </div>
   );

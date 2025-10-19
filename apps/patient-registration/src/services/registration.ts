@@ -4,7 +4,7 @@
  */
 
 import { doc, setDoc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { db } from '../firebase';
 import { websocketClient } from './websocket';
 
 export interface RegistrationData {

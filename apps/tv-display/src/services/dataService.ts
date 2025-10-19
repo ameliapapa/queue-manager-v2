@@ -1,5 +1,5 @@
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { db } from '../firebase';
 
 export interface Patient {
   id: string;

@@ -31,6 +31,10 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "firebase-admin": "^13.5.0",
     "firebase-tools": "^13.0.0"
+  },
+  "dependencies": {
+    "firebase": "^12.4.0"
   }
 }

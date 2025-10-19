@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
-import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp, runTransaction } from 'firebase/firestore';
-import { db } from '@shared/firebase/config';
+import { collection, doc, getDoc, setDoc, updateDoc, increment, query, where, getDocs, serverTimestamp, runTransaction, limit } from 'firebase/firestore';
+import { db } from '../firebase';
 // ❌ WebSocket removed - Dashboard now uses Firestore real-time listeners
 // import { websocketClient } from './websocket';
 
@@ -67,7 +67,9 @@ export async function generateQueueNumber(): Promise<GenerateQueueNumberResult> 
     const patientId = `patient-${dateString}-${queueNumber}-${Date.now()}`;
 
     // Generate registration URL
-    const registrationUrl = `${window.location.protocol}//${window.location.hostname}:3002/register?queue=${queueNumber}&patient=${patientId}`;
+    // Use environment variable or default to production patient registration URL
+    const patientAppUrl = import.meta.env.VITE_PATIENT_APP_URL || 'https://geraldina-queue-manager-patient.web.app';
+    const registrationUrl = `${patientAppUrl}/register?queue=${queueNumber}&patient=${patientId}`;
 
     // ✅ OPTIMIZED: Run QR code generation and Firestore write in parallel
     const [qrCodeDataUrl] = await Promise.all([

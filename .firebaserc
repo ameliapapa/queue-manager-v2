@@ -11,7 +11,7 @@
         "patient-registration": [
           "geraldina-queue-manager-patient"
         ],
-        "receptionist-dashboard": [
+        "dashboard": [
           "geraldina-queue-manager-receptionist"
         ],
         "tv-display": [

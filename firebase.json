@@ -20,7 +20,7 @@
   ],
   "hosting": [
     {
-      "site": "kiosk",
+      "site": "geraldina-queue-manager-kiosk",
       "public": "apps/kiosk/dist",
       "ignore": [
         "firebase.json",
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "site": "patient-registration",
+      "site": "geraldina-queue-manager-patient",
       "public": "apps/patient-registration/dist",
       "ignore": [
         "firebase.json",
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "site": "receptionist-dashboard",
+      "site": "geraldina-queue-manager-receptionist",
       "public": "apps/dashboard/dist",
       "ignore": [
         "firebase.json",
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "site": "tv-display",
+      "site": "geraldina-queue-manager-tv",
       "public": "apps/tv-display/dist",
       "ignore": [
         "firebase.json",

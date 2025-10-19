@@ -51,7 +51,7 @@
     },
     {
       "site": "receptionist-dashboard",
-      "public": "apps/receptionist-dashboard/dist",
+      "public": "apps/dashboard/dist",
       "ignore": [
         "firebase.json",
         "**/.*",

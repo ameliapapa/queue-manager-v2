@@ -107,7 +107,7 @@ function App() {
             const room: Room = {
               number: data.roomNumber,
               status: data.status === 'paused' ? 'paused' :
-                      data.currentPatient ? 'occupied' : 'available',
+                      data.currentPatient ? 'busy' : 'available',
               currentPatient: data.currentPatient ? {
                 id: data.currentPatient.id || '',
                 queueNumber: data.currentPatient.queueNumber || 0,
@@ -158,21 +158,21 @@ function App() {
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold">{sq.header.hospitalName}</h1>
-              <p className="text-primary-100 mt-2 text-lg">{sq.header.hospitalSubtitle}</p>
+              <h1 className="text-5xl font-bold">{sq.header.hospitalName}</h1>
+              <p className="text-primary-100 mt-2 text-3xl font-normal">{sq.header.hospitalSubtitle}</p>
             </div>
             <div className="text-right">
               <div className="flex items-center space-x-3">
                 <div
-                  className={`w-3 h-3 rounded-full ${
+                  className={`w-4 h-4 rounded-full ${
                     isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
                   }`}
                 ></div>
-                <span className="text-sm font-medium">
+                <span className="text-2xl font-medium">
                   {isConnected ? 'Përditësime Live' : 'Duke u lidhur...'}
                 </span>
               </div>
-              <div className="text-sm text-primary-200 mt-2">
+              <div className="text-4xl font-bold text-primary-200 mt-2">
                 {lastUpdate.toLocaleTimeString()}
               </div>
             </div>

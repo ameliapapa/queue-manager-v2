@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export interface Patient {
@@ -18,7 +18,7 @@ export interface Patient {
 
 export interface Room {
   number: number;
-  status: 'available' | 'occupied' | 'cleaning';
+  status: 'available' | 'busy' | 'paused';
   currentPatient?: Patient;
 }
 
@@ -102,7 +102,7 @@ export function getRoomStatuses(patients: Patient[]): Room[] {
 
     rooms.push({
       number: i,
-      status: patientInRoom ? 'occupied' : 'available',
+      status: patientInRoom ? 'busy' : 'available',
       currentPatient: patientInRoom,
     });
   }

@@ -11,10 +11,7 @@ function UnregisteredQueue({ patients }: UnregisteredQueueProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="bg-amber-600 text-white px-6 py-4">
-        <h2 className="text-2xl font-bold">{sq.queue.unregisteredTitle}</h2>
-        <p className="text-amber-100 text-sm mt-1">
-          {sq.messages.registerNow} ({patients.length})
-        </p>
+        <h2 className="text-3xl font-bold">{sq.queue.unregisteredTitle}</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-white">

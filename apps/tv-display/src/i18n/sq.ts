@@ -12,7 +12,7 @@ export const sq = {
     room: 'Dhoma',
     nowServing: 'Aktualisht Duke Shërbyer',
     available: 'I Disponueshëm',
-    occupied: 'I Zënë',
+    busy: 'I Zënë',
     paused: 'I Ndërprerë',
     noPatient: 'Asnjë pacient',
     pleaseWait: 'Ju lutemi prisni',

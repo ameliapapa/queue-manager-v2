@@ -28,7 +28,7 @@ type WebSocketEventData = {
   };
   'room:updated': {
     roomNumber: number;
-    status: 'available' | 'occupied' | 'cleaning';
+    status: 'available' | 'busy' | 'paused';
     currentPatient?: number;
   };
   'register': { type: 'tv' };

@@ -26,7 +26,7 @@
     @apply bg-green-500;
   }
 
-  .status-occupied {
+  .status-busy {
     @apply bg-red-500;
   }
 
@@ -52,4 +52,18 @@
 .fade-exit-active {
   opacity: 0;
   transition: opacity 300ms ease-out;
+}
+
+/* Room highlight animation for new patient assignment */
+@keyframes room-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px 5px rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 40px 15px rgba(245, 158, 11, 0.3);
+  }
+}
+
+.room-highlight {
+  animation: room-pulse 2s ease-in-out infinite;
 }

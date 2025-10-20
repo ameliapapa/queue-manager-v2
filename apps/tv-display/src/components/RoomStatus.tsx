@@ -1,6 +1,5 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { Room } from '../services/dataService';
-import { sq } from '../i18n/sq';
 
 interface RoomStatusProps {
   rooms: Room[];
@@ -43,92 +42,99 @@ function RoomStatus({ rooms }: RoomStatusProps) {
   }, [rooms]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="text-white px-6 py-4" style={{ backgroundColor: '#8B2E42' }}>
-        <h2 className="text-3xl font-bold">{sq.rooms.title}</h2>
+    <div className="flex flex-col h-full p-5">
+      {/* Header */}
+      <div
+        className="rounded-2xl mb-5 flex items-center justify-center"
+        style={{ backgroundColor: '#a03c52', height: '70px' }}
+      >
+        <h2
+          className="text-4xl font-normal text-white text-center"
+          style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '0.5px' }}
+        >
+          Dhomat e Konsultimit
+        </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-white">
-        <div className="divide-y divide-gray-200">
-          {rooms.map((room) => {
-            const isOccupiedOrPaused = room.status === 'busy' || room.status === 'paused';
-            const isHighlighted = highlightedRooms.has(room.number);
+      {/* Room Cards - Grid Layout */}
+      <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-4">
+        {rooms.map((room) => {
+          const isHighlighted = highlightedRooms.has(room.number);
+          const isBusy = room.status === 'busy';
+          const isPaused = room.status === 'paused';
+          const isAvailable = room.status === 'available';
 
-            return (
-              <div
-                key={room.number}
-                className={`p-6 transition-all duration-500 ${isHighlighted ? 'room-highlight' : ''}`}
-                style={{
-                  backgroundColor: isHighlighted
-                    ? '#fef3c7'
-                    : isOccupiedOrPaused ? '#fdf2f4' : '#f9fafb'
-                }}
-              >
-                <div className="flex items-center space-x-6">
-                  {/* Room label with maroon box */}
-                  <div
-                    className="flex items-center justify-center space-x-3 rounded-xl px-6 py-4"
-                    style={{
-                      backgroundColor: isOccupiedOrPaused ? '#b01f40' : '#d1d5db',
-                      color: isOccupiedOrPaused ? 'white' : '#4b5563'
-                    }}
+          return (
+            <div
+              key={room.number}
+              className="border-4 border-gray-200 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-500"
+              style={{
+                backgroundColor: '#fafafa'
+              }}
+            >
+              {/* Room name and status */}
+              <div className="flex items-center justify-between">
+                <h3
+                  className="text-4xl font-normal"
+                  style={{ fontFamily: 'Poppins, sans-serif', color: '#1e2939' }}
+                >
+                  Dhoma {room.number}
+                </h3>
+
+                {/* Status badge */}
+                <div
+                  className="rounded-xl px-4 py-2"
+                  style={{
+                    backgroundColor: isAvailable ? '#00c950' : isPaused ? '#99a1af' : '#a03c52',
+                    height: '44px'
+                  }}
+                >
+                  <p
+                    className="text-xl font-normal text-white whitespace-nowrap"
+                    style={{ fontFamily: 'Poppins, sans-serif' }}
                   >
-                    <div className="text-3xl font-bold">
-                      {sq.rooms.room}
-                    </div>
-                    <div className="text-3xl font-bold">
-                      {room.number}
-                    </div>
-                  </div>
-
-                  {/* Status indicator */}
-                  <div>
-                    {room.status === 'busy' && (
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className="w-4 h-4 rounded-full animate-pulse"
-                          style={{ backgroundColor: '#d12b4f' }}
-                        ></div>
-                        <span
-                          className="text-2xl font-semibold whitespace-nowrap"
-                          style={{ color: '#b01f40' }}
-                        >
-                          {sq.status.inConsultation}
-                        </span>
-                      </div>
-                    )}
-                    {room.status === 'paused' && (
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className="w-4 h-4 rounded-full animate-pulse"
-                          style={{ backgroundColor: '#d12b4f' }}
-                        ></div>
-                        <span
-                          className="text-2xl font-semibold whitespace-nowrap"
-                          style={{ color: '#b01f40' }}
-                        >
-                          {sq.rooms.paused}
-                        </span>
-                      </div>
-                    )}
-                    {!room.currentPatient && room.status === 'available' && (
-                      <div className="text-2xl font-semibold text-gray-400 whitespace-nowrap">
-                        {sq.rooms.available}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Queue number */}
-                  {room.currentPatient && (
-                    <div className="text-5xl font-bold text-gray-900">
-                      {String(room.currentPatient.queueNumber).padStart(3, '0')}
-                    </div>
-                  )}
+                    {isAvailable ? 'E lirë' : isPaused ? 'E Ndërprerë' : 'Në konsultim'}
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+
+              {/* Queue number box */}
+              <div
+                className={`bg-white rounded-xl border-2 flex items-center justify-center transition-all duration-500 ${
+                  isHighlighted ? 'queue-number-highlight' : ''
+                }`}
+                style={{
+                  borderColor: isBusy ? '#a03c52' : '#d1d5dc',
+                  height: room.currentPatient ? '85px' : '68px',
+                  backgroundColor: isHighlighted ? '#f9e5ea' : 'white'
+                }}
+              >
+                {room.currentPatient ? (
+                  <p
+                    className="text-5xl font-normal text-center"
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      letterSpacing: '2.4px',
+                      color: '#a03c52'
+                    }}
+                  >
+                    {String(room.currentPatient.queueNumber).padStart(3, '0')}
+                  </p>
+                ) : (
+                  <p
+                    className="text-2xl font-normal text-center"
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      color: '#99a1af'
+                    }}
+                  >
+                    - - -
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

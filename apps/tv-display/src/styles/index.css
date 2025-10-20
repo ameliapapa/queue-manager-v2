@@ -54,16 +54,16 @@
   transition: opacity 300ms ease-out;
 }
 
-/* Room highlight animation for new patient assignment */
-@keyframes room-pulse {
+/* Queue number highlight animation for new patient assignment */
+@keyframes queue-number-pulse {
   0%, 100% {
-    box-shadow: 0 0 20px 5px rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 12px 3px rgba(160, 60, 82, 0.5);
   }
   50% {
-    box-shadow: 0 0 40px 15px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 24px 8px rgba(160, 60, 82, 0.25);
   }
 }
 
-.room-highlight {
-  animation: room-pulse 2s ease-in-out infinite;
+.queue-number-highlight {
+  animation: queue-number-pulse 2s ease-in-out infinite;
 }

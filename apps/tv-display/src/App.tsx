@@ -3,15 +3,13 @@ import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestor
 import { db } from './firebase';
 import RoomStatus from './components/RoomStatus';
 import RegisteredPatients from './components/RegisteredPatients';
-import UnregisteredQueue from './components/UnregisteredQueue';
 import { Patient, Room } from './services/dataService';
-import { sq } from './i18n/sq';
+import hospitalLogo from './assets/mbreteresha_geraldine.svg';
 import './styles/index.css';
 
 function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [isConnected, setIsConnected] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   // Helper function to get today's date string
@@ -78,11 +76,9 @@ function App() {
           setLastUpdate(new Date());
           return updatedPatients;
         });
-        setIsConnected(true);
       },
       (error) => {
         console.error('❌ Error listening to patients:', error);
-        setIsConnected(false);
       }
     );
     unsubscribers.push(unsubPatients);
@@ -145,56 +141,48 @@ function App() {
       .sort((a, b) => a.queueNumber - b.queueNumber);
   }, [patients]);
 
-  const unregisteredPatients = useMemo(() => {
-    return patients
-      .filter((p) => p.status === 'pending' || !p.name)
-      .sort((a, b) => a.queueNumber - b.queueNumber);
-  }, [patients]);
-
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(136.392deg, rgb(249, 250, 251) 0%, rgb(243, 244, 246) 100%)' }}>
       {/* Header */}
-      <header className="text-white shadow-lg" style={{ backgroundColor: '#8B2E42' }}>
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-5xl font-bold">{sq.header.hospitalName}</h1>
-              <p className="text-primary-100 mt-2 text-3xl font-normal">{sq.header.hospitalSubtitle}</p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center space-x-3">
-                <div
-                  className={`w-4 h-4 rounded-full ${
-                    isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
-                  }`}
-                ></div>
-                <span className="text-2xl font-medium">
-                  {isConnected ? 'Përditësime Live' : 'Duke u lidhur...'}
-                </span>
+      <header className="text-white shadow-lg rounded-3xl mb-6" style={{ backgroundColor: '#a03c52', height: '140px' }}>
+        <div className="px-6 h-full flex items-center">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-5">
+              {/* Hospital Logo */}
+              <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shrink-0 p-1">
+                <img src={hospitalLogo} alt="Spitali Mbretëresha Geraldine" className="w-full h-full object-contain" />
               </div>
-              <div className="text-4xl font-bold text-primary-200 mt-2">
-                {lastUpdate.toLocaleTimeString()}
+              <div className="flex flex-col gap-1">
+                <h1 className="text-4xl font-medium leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  Spitali Mbretëresha Geraldine
+                </h1>
+                <p className="text-xl opacity-90 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  Sistemi i Radhës së Pritjes
+                </p>
+              </div>
+            </div>
+            <div className="text-right flex flex-col">
+              <div className="text-4xl font-normal leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {lastUpdate.toLocaleTimeString('sq-AL')}
+              </div>
+              <div className="text-xl opacity-90 leading-tight mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {lastUpdate.toLocaleDateString('sq-AL', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content - 3 Column Layout */}
-      <div className="h-[calc(100vh-120px)] grid grid-cols-3 gap-6 p-6">
-        {/* Column 1: Room Status */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <RoomStatus rooms={rooms} />
-        </div>
-
-        {/* Column 2: Registered Patients */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Main Content - 2 Column Layout: 1/3 Registered, 2/3 Rooms */}
+      <div className="grid grid-cols-3 gap-5">
+        {/* Left Column (1/3): Registered Patients */}
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden col-span-1">
           <RegisteredPatients patients={registeredPatients} />
         </div>
 
-        {/* Column 3: Unregistered Queue */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <UnregisteredQueue patients={unregisteredPatients} />
+        {/* Right Column (2/3): Room Status */}
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden col-span-2">
+          <RoomStatus rooms={rooms} />
         </div>
       </div>
     </div>

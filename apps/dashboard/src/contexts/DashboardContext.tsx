@@ -110,7 +110,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             }
           });
 
-          const patients = Array.from(patientsMap.values());
+          const patients = Array.from(patientsMap.values())
+            .sort((a, b) => a.queueNumber - b.queueNumber); // ✅ Sort by queue number ascending
 
           return {
             ...prev,

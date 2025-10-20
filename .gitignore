@@ -61,3 +61,6 @@ pids/
 .cache/
 temp/
 tmp/
+CREDENTIALS.md
+scripts/
+functions/scripts/

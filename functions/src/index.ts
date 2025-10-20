@@ -7,3 +7,4 @@ admin.initializeApp();
 export { generateQueueNumber } from './queue/generateQueueNumber';
 export { resetDailyQueue } from './queue/resetDailyQueue';
 export { generatePrintTicket } from './queue/generatePrintTicket';
+export { createUsers } from './admin/createDoctors';

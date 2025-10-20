@@ -9,61 +9,71 @@ interface RegisteredPatientsProps {
 // ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
 function RegisteredPatients({ patients }: RegisteredPatientsProps) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="bg-emerald-600 text-white px-6 py-4">
-        <h2 className="text-3xl font-bold">{sq.queue.registeredTitle}</h2>
+    <div className="flex flex-col h-full p-5">
+      {/* Header */}
+      <div
+        className="rounded-2xl mb-5 flex items-center justify-center"
+        style={{ backgroundColor: '#007c31', height: '70px' }}
+      >
+        <h2
+          className="text-4xl font-normal text-white text-center"
+          style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '0.5px' }}
+        >
+          Të Regjistruar
+        </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-white">
+      {/* Queue List */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-2.5">
         {patients.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center text-gray-400">
-              <svg
-                className="mx-auto h-12 w-12 mb-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
               <p className="text-sm">{sq.queue.noPatients}</p>
             </div>
           </div>
         ) : (
-          <div className="p-6">
-            <div className="grid grid-cols-3 gap-4">
-              {patients.map((patient, index) => (
+          patients.map((patient, index) => (
+            <div key={patient.id}>
+              {index === 0 ? (
                 <div
-                  key={patient.id}
-                  className={`flex items-center justify-center p-6 rounded-lg border-2 transition-colors ${
-                    index === 0
-                      ? 'bg-emerald-50 border-emerald-600'
-                      : 'bg-gray-50 border-gray-300'
-                  }`}
+                  className="rounded-xl px-4 py-4 shadow-lg flex flex-col items-center justify-center gap-2"
+                  style={{ backgroundColor: '#40ae6c', opacity: 0.792, height: '122px' }}
                 >
-                  <div className="text-center">
-                    <div
-                      className={`text-4xl font-bold ${
-                        index === 0 ? 'text-emerald-900' : 'text-gray-700'
-                      }`}
-                    >
-                      {String(patient.queueNumber).padStart(3, '0')}
-                    </div>
-                    {index === 0 && (
-                      <div className="text-xs font-medium text-emerald-700 mt-2">
-                        {sq.status.next}
-                      </div>
-                    )}
-                  </div>
+                  <p
+                    className="text-5xl font-normal text-black text-center"
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      letterSpacing: '2.4px'
+                    }}
+                  >
+                    {String(patient.queueNumber).padStart(3, '0')}
+                  </p>
+                  <p
+                    className="text-xl font-medium text-black text-center"
+                    style={{ fontFamily: 'Poppins, sans-serif' }}
+                  >
+                    Pacienti i rradhes
+                  </p>
                 </div>
-              ))}
+              ) : (
+                <div
+                  className="bg-gray-100 rounded-xl px-4 py-4 flex items-center justify-center"
+                  style={{ height: '80px' }}
+                >
+                  <p
+                    className="text-5xl font-normal text-center"
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      letterSpacing: '2.4px',
+                      color: '#1e2939'
+                    }}
+                  >
+                    {String(patient.queueNumber).padStart(3, '0')}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
+          ))
         )}
       </div>
     </div>

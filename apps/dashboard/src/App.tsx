@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
+import Login from './components/Login';
 import RoomCard from './components/RoomCard';
 import RegisteredQueueList from './components/RegisteredQueueList';
 import UnregisteredQueueList from './components/UnregisteredQueueList';
@@ -44,6 +47,14 @@ function Dashboard() {
 
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [registrationQueueNumber, setRegistrationQueueNumber] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
+
+  // Handle logout
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      await signOut(auth);
+    }
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -90,7 +101,7 @@ function Dashboard() {
               <p className="text-sm text-gray-600">{sq.header.hospitalSubtitle}</p>
             </div>
 
-            {/* Status Indicator */}
+            {/* Status Indicator & User Info */}
             <div className="flex items-center space-x-4">
               {lastSync && (
                 <p className="text-sm text-gray-600">
@@ -103,6 +114,26 @@ function Dashboard() {
                   {isConnected ? sq.header.connected : sq.header.disconnected}
                 </span>
               </div>
+              {currentUser && (
+                <>
+                  <div className="h-6 w-px bg-gray-300"></div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">{currentUser.displayName || currentUser.email}</p>
+                      <p className="text-xs text-gray-500">{currentUser.email}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Logout"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -191,15 +222,47 @@ function Dashboard() {
 }
 
 function App() {
-  // Start midnight reset service
-  useEffect(() => {
-    midnightResetService.start();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-    return () => {
-      midnightResetService.stop();
-    };
+  // Check authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
+  // Start midnight reset service
+  useEffect(() => {
+    if (isAuthenticated) {
+      midnightResetService.start();
+      return () => {
+        midnightResetService.stop();
+      };
+    }
+  }, [isAuthenticated]);
+
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-800 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  // Show dashboard if authenticated
   return (
     <DashboardProvider>
       <Dashboard />

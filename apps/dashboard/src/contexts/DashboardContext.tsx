@@ -60,10 +60,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
     // Listener 1: Registered patients
     // ✅ OPTIMIZED: Use snapshot changes for incremental updates
+    // Note: Removed orderBy to avoid needing composite index - sort in JS instead
     const registeredQ = query(
       collection(db, 'patients'),
       where('status', '==', 'registered'),
-      orderBy('queueNumber', 'asc'),
       limit(100)
     );
 

@@ -57,13 +57,13 @@
 /* Queue number highlight animation for new patient assignment */
 @keyframes queue-number-pulse {
   0%, 100% {
-    box-shadow: 0 0 12px 3px rgba(160, 60, 82, 0.5);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 24px 8px rgba(160, 60, 82, 0.25);
+    transform: scale(1.05);
   }
 }
 
 .queue-number-highlight {
-  animation: queue-number-pulse 2s ease-in-out infinite;
+  animation: queue-number-pulse 1.5s ease-in-out infinite;
 }

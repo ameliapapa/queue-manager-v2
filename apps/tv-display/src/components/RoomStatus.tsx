@@ -9,6 +9,30 @@ interface RoomStatusProps {
 function RoomStatus({ rooms }: RoomStatusProps) {
   const [highlightedRooms, setHighlightedRooms] = useState<Set<number>>(new Set());
   const previousRoomsRef = useRef<Map<number, number | undefined>>(new Map());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio on component mount
+  useEffect(() => {
+    audioRef.current = new Audio('/sounds/notification.mp3');
+    audioRef.current.volume = 0.5; // Set volume to 50%
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Function to play notification sound
+  const playNotificationSound = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0; // Reset to start
+      audioRef.current.play().catch((error) => {
+        console.warn('Failed to play notification sound:', error);
+      });
+    }
+  };
 
   // Track room patient changes and trigger animation
   useEffect(() => {
@@ -22,14 +46,14 @@ function RoomStatus({ rooms }: RoomStatusProps) {
       if (currentPatientId !== undefined && previousPatientId !== currentPatientId) {
         newHighlightedRooms.add(room.number);
 
-        // Remove highlight after 10 seconds
+        // Remove highlight after 30 seconds
         setTimeout(() => {
           setHighlightedRooms((prev) => {
             const updated = new Set(prev);
             updated.delete(room.number);
             return updated;
           });
-        }, 10000);
+        }, 30000);
       }
 
       // Update previous state
@@ -38,6 +62,8 @@ function RoomStatus({ rooms }: RoomStatusProps) {
 
     if (newHighlightedRooms.size > 0) {
       setHighlightedRooms((prev) => new Set([...prev, ...newHighlightedRooms]));
+      // Play notification sound when new patients are assigned
+      playNotificationSound();
     }
   }, [rooms]);
 
@@ -104,18 +130,19 @@ function RoomStatus({ rooms }: RoomStatusProps) {
                   isHighlighted ? 'queue-number-highlight' : ''
                 }`}
                 style={{
-                  borderColor: isBusy ? '#a03c52' : '#d1d5dc',
+                  borderColor: isHighlighted ? '#a03c52' : (isBusy ? '#a03c52' : '#d1d5dc'),
                   height: room.currentPatient ? '85px' : '68px',
-                  backgroundColor: isHighlighted ? '#f9e5ea' : 'white'
+                  backgroundColor: isHighlighted ? '#a03c52' : 'white'
                 }}
               >
                 {room.currentPatient ? (
                   <p
-                    className="text-5xl font-normal text-center"
+                    className="text-5xl text-center transition-all duration-500"
                     style={{
                       fontFamily: 'Poppins, sans-serif',
                       letterSpacing: '2.4px',
-                      color: '#a03c52'
+                      color: isHighlighted ? 'white' : '#a03c52',
+                      fontWeight: isHighlighted ? 'bold' : 'normal'
                     }}
                   >
                     {String(room.currentPatient.queueNumber).padStart(3, '0')}

@@ -92,35 +92,28 @@ function App() {
     const unsubRooms = onSnapshot(
       roomsQ,
       (snapshot) => {
-        // ✅ OPTIMIZED: Use docChanges for incremental updates
-        setRooms(prev => {
-          const roomsMap = new Map(prev.map(r => [r.number, r]));
+        const newRooms: Room[] = [];
 
-          snapshot.docChanges().forEach(change => {
-            const doc = change.doc;
-            const data = doc.data();
+        snapshot.forEach(doc => {
+          const data = doc.data();
 
-            const room: Room = {
-              number: data.roomNumber,
-              status: data.status === 'paused' ? 'paused' :
-                      data.currentPatient ? 'busy' : 'available',
-              currentPatient: data.currentPatient ? {
-                id: data.currentPatient.id || '',
-                queueNumber: data.currentPatient.queueNumber || 0,
-                name: data.currentPatient.name,
-                status: 'called',
-              } : undefined,
-            };
+          const room: Room = {
+            number: data.roomNumber,
+            status: data.status === 'paused' ? 'paused' :
+                    data.currentPatient ? 'busy' : 'available',
+            currentPatient: data.currentPatient ? {
+              id: data.currentPatient.id || '',
+              queueNumber: data.currentPatient.queueNumber || 0,
+              name: data.currentPatient.name,
+              status: 'called',
+            } : undefined,
+          };
 
-            if (change.type === 'removed') {
-              roomsMap.delete(data.roomNumber);
-            } else {
-              roomsMap.set(data.roomNumber, room);
-            }
-          });
-
-          return Array.from(roomsMap.values()).sort((a, b) => a.number - b.number);
+          newRooms.push(room);
         });
+
+        const sortedRooms = newRooms.sort((a, b) => a.number - b.number);
+        setRooms(sortedRooms);
       },
       (error) => {
         console.error('❌ Error listening to rooms:', error);

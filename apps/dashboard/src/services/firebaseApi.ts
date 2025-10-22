@@ -332,7 +332,6 @@ export async function registerPatient(
   formData: PatientFormData
 ): Promise<ApiResponse<Patient>> {
   try {
-
     // Find patient by queue number with status 'pending'
     const patientsRef = collection(db, 'patients');
     const q = query(

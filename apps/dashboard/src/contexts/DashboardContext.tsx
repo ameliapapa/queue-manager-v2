@@ -79,11 +79,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             const data = doc.data();
             const createdAt = data.createdAt?.toDate();
 
-            // Only include today's patients
+            // Only include today's patients (strict filtering)
+            // If createdAt doesn't exist or is not from today, skip this patient
             if (!createdAt || createdAt.toISOString().split('T')[0] !== dateString) {
-              if (change.type === 'removed' || change.type === 'modified') {
-                patientsMap.delete(doc.id);
-              }
+              // Always remove from map if not from today, regardless of change type
+              patientsMap.delete(doc.id);
               return;
             }
 

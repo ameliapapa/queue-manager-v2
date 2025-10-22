@@ -1,11 +1,10 @@
-import { memo, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Room } from '../services/dataService';
 
 interface RoomStatusProps {
   rooms: Room[];
 }
 
-// ✅ OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
 function RoomStatus({ rooms }: RoomStatusProps) {
   const [highlightedRooms, setHighlightedRooms] = useState<Set<number>>(new Set());
   const previousRoomsRef = useRef<Map<number, number | undefined>>(new Map());
@@ -15,6 +14,7 @@ function RoomStatus({ rooms }: RoomStatusProps) {
   useEffect(() => {
     audioRef.current = new Audio('/sounds/notification.mp3');
     audioRef.current.volume = 0.5; // Set volume to 50%
+    audioRef.current.setAttribute('preload', 'auto');
 
     return () => {
       if (audioRef.current) {
@@ -26,24 +26,47 @@ function RoomStatus({ rooms }: RoomStatusProps) {
 
   // Function to play notification sound
   const playNotificationSound = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0; // Reset to start
-      audioRef.current.play().catch((error) => {
-        console.warn('Failed to play notification sound:', error);
-      });
+    if (!audioRef.current) {
+      return;
     }
+
+    // Reset to start and attempt to play
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {
+      // Autoplay blocked - this is expected on browsers with strict autoplay policies
+      // Sound will work after user interacts with the page once
+    });
   };
+
+  // Track if this is the initial mount to avoid playing sound on first load
+  const isInitialMount = useRef(true);
 
   // Track room patient changes and trigger animation
   useEffect(() => {
+    // Skip sound and animation on initial mount - only play when rooms actually change
+    if (isInitialMount.current) {
+      // Initialize the previous rooms reference with current state
+      rooms.forEach((room) => {
+        previousRoomsRef.current.set(room.number, room.currentPatient?.queueNumber);
+      });
+      isInitialMount.current = false;
+      return;
+    }
+
     const newHighlightedRooms = new Set<number>();
 
     rooms.forEach((room) => {
       const previousPatientId = previousRoomsRef.current.get(room.number);
       const currentPatientId = room.currentPatient?.queueNumber;
 
-      // Detect if a new patient was assigned (patient changed from undefined to a value, or changed to a different patient)
-      if (currentPatientId !== undefined && previousPatientId !== currentPatientId) {
+      // Only trigger if:
+      // 1. Room previously had no patient (previousPatientId === undefined) AND now has one
+      // 2. Room had a patient but now has a different patient
+      // This prevents triggering on initial load when previousRoomsRef is already populated
+      if (currentPatientId !== undefined &&
+          previousPatientId !== currentPatientId &&
+          previousRoomsRef.current.has(room.number)) {
+        // This room had a state change (either from empty to occupied, or patient changed)
         newHighlightedRooms.add(room.number);
 
         // Remove highlight after 30 seconds
@@ -167,5 +190,5 @@ function RoomStatus({ rooms }: RoomStatusProps) {
   );
 }
 
-// ✅ OPTIMIZED: Export with React.memo to prevent unnecessary re-renders
-export default memo(RoomStatus);
+// Export without memo to ensure notification sound triggers properly
+export default RoomStatus;

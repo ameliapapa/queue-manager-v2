@@ -16,26 +16,65 @@ function RoomStatus({ rooms }: RoomStatusProps) {
     audioRef.current.volume = 0.5; // Set volume to 50%
     audioRef.current.setAttribute('preload', 'auto');
 
+    console.log('🔊 Audio system initialized');
+    console.log('📱 Tip: Click anywhere on the page to enable sound notifications');
+
+    // Attempt to unlock audio on first user interaction
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        console.log('👆 User interaction detected - attempting to unlock audio');
+        audioRef.current.play()
+          .then(() => {
+            audioRef.current!.pause();
+            audioRef.current!.currentTime = 0;
+            console.log('✅ Audio unlocked successfully! Future notifications will play sound.');
+          })
+          .catch((error) => {
+            console.log('⚠️ Audio unlock failed:', error.message);
+          });
+      }
+      // Remove listener after first interaction
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+    };
+
+    // Listen for any user interaction to unlock audio
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      // Clean up event listeners
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
     };
   }, []);
 
   // Function to play notification sound
   const playNotificationSound = () => {
     if (!audioRef.current) {
+      console.log('🔇 Audio ref is null - cannot play sound');
       return;
     }
 
+    console.log('🔊 Attempting to play notification sound');
+
     // Reset to start and attempt to play
     audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(() => {
-      // Autoplay blocked - this is expected on browsers with strict autoplay policies
-      // Sound will work after user interacts with the page once
-    });
+    audioRef.current.play()
+      .then(() => {
+        console.log('✅ Sound played successfully');
+      })
+      .catch((error) => {
+        console.log('⚠️ Autoplay blocked by browser:', error.message);
+        console.log('💡 Click anywhere on the page to enable sound for future notifications');
+      });
   };
 
   // Track if this is the initial mount to avoid playing sound on first load
@@ -45,14 +84,17 @@ function RoomStatus({ rooms }: RoomStatusProps) {
   useEffect(() => {
     // Skip sound and animation on initial mount - only play when rooms actually change
     if (isInitialMount.current) {
+      console.log('📍 Initial mount - setting up room tracking');
       // Initialize the previous rooms reference with current state
       rooms.forEach((room) => {
         previousRoomsRef.current.set(room.number, room.currentPatient?.queueNumber);
+        console.log(`  Room ${room.number}: ${room.currentPatient?.queueNumber ?? 'empty'}`);
       });
       isInitialMount.current = false;
       return;
     }
 
+    console.log('🔄 Checking for room changes...');
     const newHighlightedRooms = new Set<number>();
 
     rooms.forEach((room) => {
@@ -67,6 +109,8 @@ function RoomStatus({ rooms }: RoomStatusProps) {
           previousPatientId !== currentPatientId &&
           previousRoomsRef.current.has(room.number)) {
         // This room had a state change (either from empty to occupied, or patient changed)
+        console.log(`🆕 NEW patient assignment detected!`);
+        console.log(`  Room ${room.number}: ${previousPatientId ?? 'empty'} → ${currentPatientId}`);
         newHighlightedRooms.add(room.number);
 
         // Remove highlight after 30 seconds
@@ -84,9 +128,12 @@ function RoomStatus({ rooms }: RoomStatusProps) {
     });
 
     if (newHighlightedRooms.size > 0) {
+      console.log(`🎯 ${newHighlightedRooms.size} new assignment(s) - triggering notification`);
       setHighlightedRooms((prev) => new Set([...prev, ...newHighlightedRooms]));
       // Play notification sound when new patients are assigned
       playNotificationSound();
+    } else {
+      console.log('  No new assignments detected');
     }
   }, [rooms]);
 

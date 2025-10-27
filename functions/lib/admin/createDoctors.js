@@ -33,40 +33,43 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDoctorUsers = void 0;
+exports.createUsers = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const doctors = [
-    { email: 'doctor1@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Alban Kurti' },
-    { email: 'doctor2@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Elira Hoxha' },
-    { email: 'doctor3@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Fatmir Shehu' },
-    { email: 'doctor4@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Gerta Rama' },
-    { email: 'doctor5@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Ilir Mema' }
+const users = [
+    // Reception staff
+    { email: 'reception@geraldine.com', password: 'Reception123!', displayName: 'Reception Staff', role: 'reception' },
+    // Doctors
+    { email: 'doctor1@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Alban Kurti', role: 'doctor' },
+    { email: 'doctor2@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Elira Hoxha', role: 'doctor' },
+    { email: 'doctor3@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Fatmir Shehu', role: 'doctor' },
+    { email: 'doctor4@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Gerta Rama', role: 'doctor' },
+    { email: 'doctor5@geraldine.com', password: 'Doctor123!', displayName: 'Dr. Ilir Mema', role: 'doctor' }
 ];
-exports.createDoctorUsers = functions.https.onRequest(async (req, res) => {
+exports.createUsers = functions.https.onRequest(async (req, res) => {
     const results = [];
-    for (const doctor of doctors) {
+    for (const user of users) {
         try {
             const userRecord = await admin.auth().createUser({
-                email: doctor.email,
-                password: doctor.password,
-                displayName: doctor.displayName,
+                email: user.email,
+                password: user.password,
+                displayName: user.displayName,
                 emailVerified: true
             });
-            await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'doctor' });
+            await admin.auth().setCustomUserClaims(userRecord.uid, { role: user.role });
             await admin.firestore().collection('users').doc(userRecord.uid).set({
-                email: doctor.email,
-                displayName: doctor.displayName,
-                role: 'doctor',
+                email: user.email,
+                displayName: user.displayName,
+                role: user.role,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 active: true
             });
-            results.push({ success: true, email: doctor.email, uid: userRecord.uid });
+            results.push({ success: true, email: user.email, uid: userRecord.uid, role: user.role });
         }
         catch (error) {
-            results.push({ success: false, email: doctor.email, error: error.message });
+            results.push({ success: false, email: user.email, error: error.message });
         }
     }
-    res.json({ results, credentials: doctors });
+    res.json({ results, credentials: users });
 });
 //# sourceMappingURL=createDoctors.js.map

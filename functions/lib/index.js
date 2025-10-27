@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDoctorUsers = exports.generatePrintTicket = exports.resetDailyQueue = exports.generateQueueNumber = void 0;
+exports.createUsers = exports.generatePrintTicket = exports.resetDailyQueue = exports.generateQueueNumber = void 0;
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -45,5 +45,5 @@ Object.defineProperty(exports, "resetDailyQueue", { enumerable: true, get: funct
 var generatePrintTicket_1 = require("./queue/generatePrintTicket");
 Object.defineProperty(exports, "generatePrintTicket", { enumerable: true, get: function () { return generatePrintTicket_1.generatePrintTicket; } });
 var createDoctors_1 = require("./admin/createDoctors");
-Object.defineProperty(exports, "createDoctorUsers", { enumerable: true, get: function () { return createDoctors_1.createDoctorUsers; } });
+Object.defineProperty(exports, "createUsers", { enumerable: true, get: function () { return createDoctors_1.createUsers; } });
 //# sourceMappingURL=index.js.map

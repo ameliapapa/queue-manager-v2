@@ -107,8 +107,8 @@ export const resetDailyQueue = functions.pubsub
       roomsSnapshot.forEach((doc) => {
         batch.update(doc.ref, {
           status: 'available',
-          currentPatientQueue: null,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          currentPatient: null,
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         });
       });
 
